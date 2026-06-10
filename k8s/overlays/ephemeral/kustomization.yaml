@@ -1,0 +1,25 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+patches:
+  # Replace PVC-backed volume with emptyDir in the Deployment
+  - target:
+      kind: Deployment
+      name: tinycode
+    patch: |
+      - op: replace
+        path: /spec/template/spec/volumes/0
+        value:
+          name: tinycode-data
+          emptyDir: {}
+  # Delete the PVC resource itself (required — kustomize does not auto-remove base resources)
+  - target:
+      kind: PersistentVolumeClaim
+      name: tinycode-data
+    patch: |
+      $patch: delete
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: tinycode-data

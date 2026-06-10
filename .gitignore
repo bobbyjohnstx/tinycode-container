@@ -1,0 +1,6 @@
+.env
+*.token
+k8s/secrets/secret.yaml
+.omc/
+node_modules/
+dist/

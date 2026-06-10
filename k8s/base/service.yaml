@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: tinycode
+  namespace: tinycode
+spec:
+  selector:
+    app: tinycode
+  ports:
+  - port: 3000
+    targetPort: 3000
+    protocol: TCP

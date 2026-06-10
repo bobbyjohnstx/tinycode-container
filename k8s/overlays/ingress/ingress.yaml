@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tinycode
+  namespace: tinycode
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: tinycode.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: tinycode
+            port:
+              number: 3000
+  tls:
+  - hosts:
+    - tinycode.example.com
+    secretName: tinycode-tls

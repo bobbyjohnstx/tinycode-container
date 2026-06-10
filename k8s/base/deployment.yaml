@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tinycode
+  namespace: tinycode
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tinycode
+  template:
+    metadata:
+      labels:
+        app: tinycode
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 0
+      containers:
+      - name: tinycode
+        image: ghcr.io/bjohns/tiny-container:latest
+        ports:
+        - containerPort: 3000
+          protocol: TCP
+        env:
+        - name: TINYCODE_SERVER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: tinycode-auth
+              key: server-password
+              optional: true
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        # tcpSocket probes used instead of httpGet:
+        # /global/health is behind Authorization middleware (api.ts:26-31).
+        # When TINYCODE_SERVER_PASSWORD is set, httpGet probes receive HTTP 401
+        # causing CrashLoopBackOff. tcpSocket validates process is listening.
+        # Long-term fix: add /global/health to public paths (tracked in Gitea Issue #2).
+        livenessProbe:
+          tcpSocket:
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          tcpSocket:
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: [ALL]
+          seccompProfile:
+            type: RuntimeDefault
+        volumeMounts:
+        - name: tinycode-data
+          mountPath: /home/tinycode/.local/share/tinycode
+          subPath: data
+        - name: tinycode-data
+          mountPath: /home/tinycode/.config/tinycode
+          subPath: config
+      volumes:
+      - name: tinycode-data
+        persistentVolumeClaim:
+          claimName: tinycode-data
