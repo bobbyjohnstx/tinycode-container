@@ -1,68 +1,51 @@
-# syntax=docker/dockerfile:1
-# tiny-container: tinycode (web mode) + oh-my-tiny (native plugin)
-# Build: podman build -f ContainerFile --secret id=github_token,src=$HOME/.github-token -t ghcr.io/bjohns/tiny-container:latest .
+# Local development build — uses source dirs copied into build context by build-local.sh.
+# Do NOT run podman build directly; use: ./build-local.sh
 
 # Stage 1: Build tinycode binary
 FROM registry.access.redhat.com/ubi9/ubi AS builder
 
 RUN dnf install -y git unzip make gcc gcc-c++ && dnf clean all
-
-# Install Bun (tinycode build toolchain)
 RUN curl -fsSL https://bun.sh/install | bash
 ENV PATH="/root/.bun/bin:$PATH"
 
-# Clone tinycode from GitHub (private repo — secret not baked into layer)
-RUN --mount=type=secret,id=github_token \
-    git clone https://$(cat /run/secrets/github_token)@github.com/bjohns/tinycode.git /build/tinycode
+# Source copied into build context by build-local.sh (excludes node_modules/.git)
+COPY tinycode-src/ /build/tinycode/
 
 WORKDIR /build/tinycode
 RUN bun install --frozen-lockfile
-# Build single self-contained binary (script/build.ts:263 — Bun compile)
+# TINYCODE_CHANNEL bypasses the `git branch --show-current` call in build.ts:30
+ENV TINYCODE_CHANNEL=container
 RUN bun run --cwd packages/tinycode build --single
 
 # Stage 2: Build oh-my-tiny plugin
 FROM registry.access.redhat.com/ubi9/ubi AS plugin-builder
 
-RUN dnf install -y git && dnf clean all
-
-# Install Node.js 20 (oh-my-tiny requires node>=20 per package.json:38)
 RUN curl -fsSL https://rpm.nodesource.com/setup_20.x | bash - && \
     dnf install -y nodejs && dnf clean all
 
-# Clone oh-my-tiny from GitHub (private repo — secret not baked into layer)
-RUN --mount=type=secret,id=github_token \
-    git clone https://$(cat /run/secrets/github_token)@github.com/bjohns/oh-my-tiny.git /build/oh-my-tiny
+COPY oh-my-tiny-src/ /build/oh-my-tiny/
 
 WORKDIR /build/oh-my-tiny
-# npm ci installs platform-specific @ast-grep/napi-linux-x64-gnu bindings
 RUN npm ci
-# tsc compiles src/ → dist/ (package.json:8)
 RUN npm run build
 
-# Stage 3: Runtime image (UBI9-minimal — OpenShift compatible)
+# Stage 3: Runtime (UBI9-minimal — OpenShift compatible)
 FROM registry.access.redhat.com/ubi9/ubi-minimal AS runtime
 
-# Install shadow-utils for useradd, then remove to reduce image size
 RUN microdnf install -y shadow-utils && microdnf clean all
 
-# Create non-root user (UID 1001, GID 0 for OpenShift arbitrary UID support)
 RUN useradd -u 1001 -r -g 0 -m -s /sbin/nologin tinycode && \
     microdnf remove -y shadow-utils && microdnf clean all
 
-# Copy tinycode self-contained binary (script/build.ts:264 — linux glibc variant)
 COPY --from=builder /build/tinycode/packages/tinycode/dist/tinycode-linux-*/bin/tinycode /usr/local/bin/tinycode
 
-# Copy oh-my-tiny plugin dist and node_modules (needed for @ast-grep/napi native bindings)
 COPY --from=plugin-builder /build/oh-my-tiny/dist /opt/oh-my-tiny/dist
 COPY --from=plugin-builder /build/oh-my-tiny/package.json /opt/oh-my-tiny/package.json
 COPY --from=plugin-builder /build/oh-my-tiny/node_modules /opt/oh-my-tiny/node_modules
 
-# Copy entrypoint script
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# XDG directories for tinycode persistence (src/core/global.ts:10-13)
-# PVC should mount /home/tinycode/.local/share/tinycode and /home/tinycode/.config/tinycode
 ENV XDG_DATA_HOME=/home/tinycode/.local/share \
     XDG_CONFIG_HOME=/home/tinycode/.config \
     XDG_STATE_HOME=/home/tinycode/.local/state \
