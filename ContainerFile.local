@@ -1,8 +1,12 @@
 # Local development build — uses source dirs copied into build context by build-local.sh.
 # Do NOT run podman build directly; use: ./build-local.sh
 
+ARG TARGETARCH
+
 # Stage 1: Build tinycode binary
 FROM registry.access.redhat.com/ubi9/ubi AS builder
+
+ARG TARGETARCH
 
 RUN dnf install -y git unzip make gcc gcc-c++ && dnf clean all
 RUN curl -fsSL https://bun.sh/install | bash
@@ -20,6 +24,8 @@ RUN bun run --cwd packages/tinycode build --single
 # Stage 2: Build oh-my-tiny plugin
 FROM registry.access.redhat.com/ubi9/ubi AS plugin-builder
 
+ARG TARGETARCH
+
 RUN curl -fsSL https://rpm.nodesource.com/setup_20.x | bash - && \
     dnf install -y nodejs && dnf clean all
 
@@ -31,6 +37,8 @@ RUN npm run build
 
 # Stage 3: Runtime (UBI9-minimal — OpenShift compatible)
 FROM registry.access.redhat.com/ubi9/ubi-minimal AS runtime
+
+ARG TARGETARCH
 
 RUN microdnf install -y shadow-utils && microdnf clean all
 

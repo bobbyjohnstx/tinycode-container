@@ -19,32 +19,38 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install podman
-      run: |
-        sudo apt-get update -qq
-        sudo apt-get install -y podman
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
 
     - name: Log in to GHCR
-      run: |
-        echo "${{ secrets.GITHUB_TOKEN }}" | podman login ghcr.io \
-          -u ${{ github.actor }} --password-stdin
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Build image
-      run: |
-        podman build -f ContainerFile \
-          --secret id=github_token,env=GITHUB_TOKEN \
-          -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
-          -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
-          .
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build and push multi-arch image
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        file: ContainerFile
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+        secrets: |
+          github_token=${{ secrets.GITHUB_TOKEN }}
 
-    - name: Push image
+    - name: Smoke test (amd64)
       run: |
-        podman push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-        podman push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+        docker run --rm --platform linux/amd64 --entrypoint tinycode \
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} --version
 
-    - name: Smoke test
+    - name: Smoke test (arm64)
       run: |
-        podman run --rm --entrypoint tinycode \
+        docker run --rm --platform linux/arm64 --entrypoint tinycode \
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} --version
