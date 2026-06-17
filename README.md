@@ -6,11 +6,29 @@ Single Podman container image running **tinycode** (web mode) + **oh-my-tiny** (
 
 This project packages tinycode and the oh-my-tiny plugin as a self-contained container image suitable for multi-tenant Kubernetes/OpenShift environments. The container runs tinycode's web mode, exposing an HTTP API and embedded SolidJS web UI on port 3000.
 
+## Quick Install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/bjohns/tiny-container/main/install.sh | sh
+```
+
+This installs a `tinycode` wrapper script that:
+- Pulls the container image if not present
+- Starts a named container with persistent volumes on first run
+- Attaches to the existing container on subsequent runs (sub-second startup)
+- Detects `podman` vs `docker` automatically
+
+To uninstall: `tinycode --uninstall`
+
 ## Prerequisites
 
-- **podman** (for local builds and testing)
+- **podman** or **docker** (for running and local builds)
 - **kubectl** or **oc** (for Kubernetes/OpenShift deployment)
 - **GitHub token** with repo read access to private repositories (bjohns/tinycode and bjohns/oh-my-tiny)
+
+## Multi-Architecture Support
+
+The container image is built for both `linux/amd64` and `linux/arm64`. CI produces a multi-arch manifest, so `podman pull` or `docker pull` selects the correct architecture automatically.
 
 ## Build Locally
 
@@ -18,8 +36,14 @@ This project packages tinycode and the oh-my-tiny plugin as a self-contained con
 # Save your GitHub token to a file
 echo $GITHUB_TOKEN > ~/.github-token
 
-# Build the container image with podman
+# Build for the current architecture
 podman build -f ContainerFile \
+  --secret id=github_token,src=$HOME/.github-token \
+  -t ghcr.io/bjohns/tiny-container:latest .
+
+# Build for a specific architecture
+podman build -f ContainerFile \
+  --platform linux/arm64 \
   --secret id=github_token,src=$HOME/.github-token \
   -t ghcr.io/bjohns/tiny-container:latest .
 ```
@@ -43,8 +67,19 @@ For persistent storage during local testing:
 
 ```bash
 podman run -d -p 3000:3000 \
+  --name tinycode \
   -v tinycode-data:/home/tinycode/.local/share/tinycode \
   -v tinycode-config:/home/tinycode/.config/tinycode \
+  ghcr.io/bjohns/tiny-container:latest
+```
+
+## Session Attach
+
+Set the `TINYCODE_SESSION_ID` environment variable to attach to an existing session on container start:
+
+```bash
+podman run -d -p 3000:3000 \
+  -e TINYCODE_SESSION_ID=my-session \
   ghcr.io/bjohns/tiny-container:latest
 ```
 
@@ -128,11 +163,13 @@ Load order: `config.json` → `tinycode.json` → `tinycode.jsonc`
 
 ## CI/CD
 
-The GitHub Actions workflow (`.github/workflows/build-push.yaml`) automatically builds and pushes images to `ghcr.io/bjohns/tiny-container` on every push to main:
+The GitHub Actions workflow (`.github/workflows/build-push.yaml`) automatically builds and pushes multi-arch images to `ghcr.io/bjohns/tiny-container` on every push to main:
 
+- **Platforms:** `linux/amd64`, `linux/arm64`
 - **Tags:** `:latest` and `:${github.sha}`
-- **Smoke test:** Runs `tinycode --version` to verify binary integrity
+- **Smoke test:** Runs `tinycode --version` on both architectures
 - **Registry:** GitHub Container Registry (GHCR)
+- **Build:** Uses `docker/build-push-action` with QEMU for cross-compilation
 
 ## Known Limitations
 

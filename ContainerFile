@@ -1,9 +1,14 @@
 # syntax=docker/dockerfile:1
 # tiny-container: tinycode (web mode) + oh-my-tiny (native plugin)
-# Build: podman build -f ContainerFile --secret id=github_token,src=$HOME/.github-token -t ghcr.io/bjohns/tiny-container:latest .
+# Build: podman build -f ContainerFile --platform linux/amd64 --secret id=github_token,src=$HOME/.github-token -t ghcr.io/bjohns/tiny-container:latest .
+# Multi-arch: podman build -f ContainerFile --platform linux/amd64,linux/arm64 ...
+
+ARG TARGETARCH
 
 # Stage 1: Build tinycode binary
 FROM registry.access.redhat.com/ubi9/ubi AS builder
+
+ARG TARGETARCH
 
 RUN dnf install -y git unzip make gcc gcc-c++ && dnf clean all
 
@@ -23,6 +28,8 @@ RUN bun run --cwd packages/tinycode build --single
 # Stage 2: Build oh-my-tiny plugin
 FROM registry.access.redhat.com/ubi9/ubi AS plugin-builder
 
+ARG TARGETARCH
+
 RUN dnf install -y git && dnf clean all
 
 # Install Node.js 20 (oh-my-tiny requires node>=20 per package.json:38)
@@ -34,13 +41,15 @@ RUN --mount=type=secret,id=github_token \
     git clone https://$(cat /run/secrets/github_token)@github.com/bjohns/oh-my-tiny.git /build/oh-my-tiny
 
 WORKDIR /build/oh-my-tiny
-# npm ci installs platform-specific @ast-grep/napi-linux-x64-gnu bindings
+# npm ci installs platform-specific @ast-grep/napi native bindings
 RUN npm ci
 # tsc compiles src/ → dist/ (package.json:8)
 RUN npm run build
 
 # Stage 3: Runtime image (UBI9-minimal — OpenShift compatible)
 FROM registry.access.redhat.com/ubi9/ubi-minimal AS runtime
+
+ARG TARGETARCH
 
 # Install shadow-utils for useradd, then remove to reduce image size
 RUN microdnf install -y shadow-utils && microdnf clean all
