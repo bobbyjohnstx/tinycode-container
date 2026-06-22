@@ -31,7 +31,10 @@ if [ "${TINYCODE_CLUSTER_ADMIN}" = "true" ]; then
       *)       OC_ARCH="amd64" ;;
     esac
     OC_VERSION="${TINYCODE_OC_VERSION:-stable}"
-    OC_URL="https://mirror.openshift.com/pub/openshift-v4/clients/oc/${OC_VERSION}/linux-${OC_ARCH}/oc.tar.gz"
+    case "$OC_ARCH" in
+      arm64) OC_URL="https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${OC_VERSION}/openshift-client-linux-arm64.tar.gz" ;;
+      *)     OC_URL="https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${OC_VERSION}/openshift-client-linux.tar.gz" ;;
+    esac
     mkdir -p /home/tinycode/.local/bin
     set +e
     if curl -fsSL --max-time 120 "$OC_URL" | tar xz -C /home/tinycode/.local/bin oc 2>/dev/null; then
