@@ -18,7 +18,7 @@ ENV PATH="/root/.bun/bin:$PATH"
 
 # Clone tinycode from GitHub (private repo — secret not baked into layer)
 RUN --mount=type=secret,id=github_token \
-    git clone https://$(cat /run/secrets/github_token)@github.com/bjohns/tinycode.git /build/tinycode
+    git clone https://$(cat /run/secrets/github_token)@github.com/bobbyjohnstx/tinycode.git /build/tinycode
 
 WORKDIR /build/tinycode
 RUN bun install --frozen-lockfile
@@ -38,7 +38,7 @@ RUN curl -fsSL https://rpm.nodesource.com/setup_20.x | bash - && \
 
 # Clone oh-my-tiny from GitHub (private repo — secret not baked into layer)
 RUN --mount=type=secret,id=github_token \
-    git clone https://$(cat /run/secrets/github_token)@github.com/bjohns/oh-my-tiny.git /build/oh-my-tiny
+    git clone https://$(cat /run/secrets/github_token)@github.com/bobbyjohnstx/oh-my-tiny.git /build/oh-my-tiny
 
 WORKDIR /build/oh-my-tiny
 # npm ci installs platform-specific @ast-grep/napi native bindings
