@@ -51,8 +51,8 @@ FROM registry.access.redhat.com/ubi9/ubi-minimal AS runtime
 
 ARG TARGETARCH
 
-# Install shadow-utils for useradd, then remove to reduce image size
-RUN microdnf install -y shadow-utils && microdnf clean all
+# Install shadow-utils for useradd and curl for oc CLI download, then remove shadow-utils
+RUN microdnf install -y shadow-utils curl && microdnf clean all
 
 # Create non-root user (UID 1001, GID 0 for OpenShift arbitrary UID support)
 RUN useradd -u 1001 -r -g 0 -m -s /sbin/nologin tinycode && \
@@ -75,7 +75,8 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 ENV XDG_DATA_HOME=/home/tinycode/.local/share \
     XDG_CONFIG_HOME=/home/tinycode/.config \
     XDG_STATE_HOME=/home/tinycode/.local/state \
-    XDG_CACHE_HOME=/home/tinycode/.cache
+    XDG_CACHE_HOME=/home/tinycode/.cache \
+    PATH="/home/tinycode/.local/bin:${PATH}"
 
 RUN mkdir -p \
     /home/tinycode/.local/share/tinycode \
