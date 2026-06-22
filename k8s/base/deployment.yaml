@@ -21,11 +21,11 @@ spec:
       - name: tinycode
         image: ghcr.io/bjohns/tiny-container:latest
         ports:
-        - containerPort: 3000
+        - containerPort: 4096
           protocol: TCP
         env:
         - name: TINYCODE_PORT
-          value: "3000"
+          value: "4096"
         - name: TINYCODE_SERVER_PASSWORD
           valueFrom:
             secretKeyRef:
@@ -43,7 +43,7 @@ spec:
         livenessProbe:
           httpGet:
             path: /global/health
-            port: 3000
+            port: 4096
           initialDelaySeconds: 10
           periodSeconds: 30
           timeoutSeconds: 5
@@ -51,7 +51,7 @@ spec:
         readinessProbe:
           httpGet:
             path: /global/health
-            port: 3000
+            port: 4096
           initialDelaySeconds: 5
           periodSeconds: 10
           timeoutSeconds: 3

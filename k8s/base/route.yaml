@@ -9,7 +9,7 @@ spec:
     name: tinycode
     weight: 100
   port:
-    targetPort: 3000
+    targetPort: 4096
   tls:
     termination: edge
     insecureEdgeTerminationPolicy: Redirect

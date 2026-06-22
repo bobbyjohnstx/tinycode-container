@@ -17,7 +17,7 @@ spec:
           service:
             name: tinycode
             port:
-              number: 3000
+              number: 4096
   tls:
   - hosts:
     - tinycode.example.com

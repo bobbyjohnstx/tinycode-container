@@ -7,6 +7,6 @@ spec:
   selector:
     app: tinycode
   ports:
-  - port: 3000
-    targetPort: 3000
+  - port: 4096
+    targetPort: 4096
     protocol: TCP
