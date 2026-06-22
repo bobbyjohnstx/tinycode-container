@@ -41,7 +41,7 @@ FROM registry.access.redhat.com/ubi9/ubi-minimal AS runtime
 ARG TARGETARCH
 
 # Install shadow-utils for useradd and curl for oc CLI download, then remove shadow-utils
-RUN microdnf install -y shadow-utils tar && microdnf clean all
+RUN microdnf install -y shadow-utils tar gzip && microdnf clean all
 
 RUN useradd -u 1001 -r -g 0 -m -s /sbin/nologin tinycode && \
     microdnf remove -y shadow-utils && microdnf clean all
