@@ -15,10 +15,7 @@ export TINYCODE_OLLAMA_HOST="${TINYCODE_OLLAMA_HOST:-http://host.containers.inte
 DEFAULTS_FILE="$XDG_CONFIG_HOME/tinycode/config.json"
 cat > "$DEFAULTS_FILE" << 'EOF'
 {
-  "plugin": ["/opt/oh-my-tiny"],
-  "server": {
-    "port": 3000
-  }
+  "plugin": ["/opt/oh-my-tiny"]
 }
 EOF
 
