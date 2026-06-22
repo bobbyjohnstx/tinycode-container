@@ -37,11 +37,14 @@ if [ "${TINYCODE_CLUSTER_ADMIN}" = "true" ]; then
     esac
     mkdir -p /home/tinycode/.local/bin
     set +e
-    if curl -fsSL --max-time 120 "$OC_URL" | tar xz -C /home/tinycode/.local/bin oc 2>/dev/null; then
-      echo "[tinycode] oc CLI installed: $(oc version --client 2>/dev/null | head -1)"
+    OC_TMP=$(mktemp /tmp/oc-XXXXXX.tar.gz)
+    if curl -fsSL --max-time 120 "$OC_URL" -o "$OC_TMP" 2>/dev/null && \
+       tar xz -C /home/tinycode/.local/bin oc -f "$OC_TMP" 2>/dev/null; then
+      echo "[tinycode] oc CLI installed: $(/home/tinycode/.local/bin/oc version --client 2>/dev/null | head -1)"
     else
       echo "[tinycode] WARNING: Failed to download oc CLI. Cluster-admin agent will be available but oc commands will fail."
     fi
+    rm -f "$OC_TMP"
     set -e
   fi
 
