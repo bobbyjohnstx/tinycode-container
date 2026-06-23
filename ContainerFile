@@ -47,21 +47,21 @@ RUN npm ci
 RUN npm run build
 
 # Stage 3: Runtime image (UBI9-minimal — OpenShift compatible)
-FROM registry.access.redhat.com/ubi9/ubi-minimal AS runtime
+FROM registry.access.redhat.com/ubi9/ubi AS runtime
 
 ARG TARGETARCH
 
 # Install shadow-utils for useradd and curl for oc CLI download, then remove shadow-utils
-RUN microdnf install -y shadow-utils tar gzip && microdnf clean all
+RUN dnf install -y shadow-utils tar gzip && dnf clean all
 
 # Create non-root user (UID 1001, GID 0 for OpenShift arbitrary UID support)
 RUN useradd -u 1001 -r -g 0 -m -s /sbin/nologin tinycode && \
-    microdnf remove -y shadow-utils && microdnf clean all
+    dnf remove -y shadow-utils && dnf clean all
 
 # Install tmux via EPEL (not in standard UBI9 repos)
 RUN rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
-    microdnf install -y tmux && \
-    microdnf clean all
+    dnf install -y tmux && \
+    dnf clean all
 
 # Copy tinycode self-contained binary (script/build.ts:264 — linux glibc variant)
 COPY --from=builder /build/tinycode/packages/tinycode/dist/tinycode-linux-*/bin/tinycode /usr/local/bin/tinycode
