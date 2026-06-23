@@ -52,7 +52,7 @@ FROM registry.access.redhat.com/ubi9/ubi-minimal AS runtime
 ARG TARGETARCH
 
 # Install shadow-utils for useradd and curl for oc CLI download, then remove shadow-utils
-RUN microdnf install -y shadow-utils tar gzip && microdnf clean all
+RUN microdnf install -y shadow-utils tar gzip tmux && microdnf clean all
 
 # Create non-root user (UID 1001, GID 0 for OpenShift arbitrary UID support)
 RUN useradd -u 1001 -r -g 0 -m -s /sbin/nologin tinycode && \
