@@ -1,4 +1,4 @@
-# tiny-container
+# tinycode-container
 
 Single container image running **tinycode** (web mode) + **oh-my-tiny** (native plugin) for deployment to OpenShift and Kubernetes.
 
@@ -11,7 +11,7 @@ The container interface (port, UID, health endpoints, volume mounts, environment
 ## Quick Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/bjohns/tiny-container/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/bjohns/tinycode-container/main/install.sh | sh
 ```
 
 This installs a `tinycode` wrapper script that:
@@ -41,13 +41,13 @@ echo $GITHUB_TOKEN > ~/.github-token
 # Build for the current architecture
 podman build -f ContainerFile \
   --secret id=github_token,src=$HOME/.github-token \
-  -t ghcr.io/bjohns/tiny-container:latest .
+  -t ghcr.io/bjohns/tinycode-container:latest .
 
 # Build for a specific architecture
 podman build -f ContainerFile \
   --platform linux/arm64 \
   --secret id=github_token,src=$HOME/.github-token \
-  -t ghcr.io/bjohns/tiny-container:latest .
+  -t ghcr.io/bjohns/tinycode-container:latest .
 ```
 
 The multi-stage build:
@@ -59,7 +59,7 @@ The multi-stage build:
 
 ```bash
 # Run the container in detached mode
-podman run -d -p 4096:4096 ghcr.io/bjohns/tiny-container:latest
+podman run -d -p 4096:4096 ghcr.io/bjohns/tinycode-container:latest
 
 # Open the web UI
 open http://localhost:4096
@@ -72,7 +72,7 @@ podman run -d -p 4096:4096 \
   --name tinycode \
   -v tinycode-data:/home/tinycode/.local/share/tinycode \
   -v tinycode-config:/home/tinycode/.config/tinycode \
-  ghcr.io/bjohns/tiny-container:latest
+  ghcr.io/bjohns/tinycode-container:latest
 ```
 
 ## Session Attach
@@ -82,7 +82,7 @@ Set the `TINYCODE_SESSION_ID` environment variable to attach to an existing sess
 ```bash
 podman run -d -p 4096:4096 \
   -e TINYCODE_SESSION_ID=my-session \
-  ghcr.io/bjohns/tiny-container:latest
+  ghcr.io/bjohns/tinycode-container:latest
 ```
 
 ## Deploy to OpenShift
@@ -161,16 +161,21 @@ Load order (lowest to highest priority): `config.json` → `tinycode.json` → `
 | `TINYCODE_PORT` | `4096` | Override server port |
 | `TINYCODE_DISABLE_LSP_DOWNLOAD` | `1` | Skip LSP binary auto-download |
 | `TINYCODE_SESSION_ID` | *(none)* | Attach to existing session on start |
+| `OPENROUTER_API_KEY` | *(none)* | OpenRouter API key for cost tracking and balance display |
 
 ## CI/CD
 
-The GitHub Actions workflow (`.github/workflows/build-push.yaml`) automatically builds and pushes multi-arch images to `ghcr.io/bjohns/tiny-container` on every push to main:
+The GitHub Actions workflow (`.github/workflows/build-push.yaml`) automatically builds and pushes multi-arch images to `ghcr.io/bjohns/tinycode-container` on every push to main:
 
 - **Platforms:** `linux/amd64`, `linux/arm64`
 - **Tags:** `:latest` and `:<git-sha>`
 - **Smoke test:** Runs `tinycode --version` on both architectures
 - **Registry:** GitHub Container Registry (GHCR)
 - **Build:** Uses `docker/build-push-action` with QEMU for cross-compilation
+
+## Features
+
+**Swarm Tool:** The container includes `tmux` (compiled from source in the builder stage) to support the `/swarm` tool, which launches supervised multi-worker sessions with shared persistence. The swarm tool is particularly useful for distributed task solving via OpenRouter or other compatible providers.
 
 ## Known Limitations
 

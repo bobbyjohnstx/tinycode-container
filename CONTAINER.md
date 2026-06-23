@@ -1,14 +1,14 @@
 # Container Contract
 
 This file is the authoritative source of truth for the tinycode container interface.
-Both `tiny-container` (which produces the image) and `tinycode-operator` (which deploys it)
+Both `tinycode-container` (which produces the image) and `tinycode-operator` (which deploys it)
 must stay in sync with these values.
 
 ## Image
 
 | Field | Value |
 |-------|-------|
-| Registry | `ghcr.io/bjohns/tiny-container` |
+| Registry | `ghcr.io/bjohns/tinycode-container` |
 | Tags | `:latest`, `:<git-sha>` |
 | Architectures | `linux/amd64`, `linux/arm64` |
 | Base | Red Hat UBI9-minimal |
@@ -51,6 +51,11 @@ must stay in sync with these values.
 | `TINYCODE_PORT` | `4096` | Override server port |
 | `TINYCODE_DISABLE_LSP_DOWNLOAD` | `1` (recommended in containers) | Skip LSP binary auto-download |
 | `TINYCODE_SESSION_ID` | *(none)* | Attach to existing session on start |
+| `OPENROUTER_API_KEY` | *(none)* | OpenRouter API key for cost tracking and balance display |
+
+## Included Tools
+
+**tmux** (v3.4) is compiled from source and included in the runtime image to support the `/swarm` skill — a supervised multi-worker orchestration tool that creates split-screen sessions for distributed task solving.
 
 ## Startup Behaviour
 
@@ -85,5 +90,5 @@ tinycode.jsonc  (PVC-persisted — user customisations survive image upgrades)
 | Project | Purpose | Gitea | GitHub |
 |---------|---------|-------|--------|
 | `tinycode` | Core server, TUI, CLI | `localhost:3000/bjohns/tinycode` | `github.com/bobbyjohnstx/tinycode` |
-| `tiny-container` | Container image | `localhost:3000/bjohns/tiny-container` | `github.com/bobbyjohnstx/tiny-container` |
+| `tinycode-container` | Container image | `localhost:3000/bjohns/tinycode-container` | `github.com/bobbyjohnstx/tinycode-container` |
 | `tinycode-operator` | OpenShift Operator | `localhost:3000/bjohns/tinycode-operator` | `github.com/bobbyjohnstx/tinycode-operator` |

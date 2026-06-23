@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
-# tiny-container: tinycode (web mode) + oh-my-tiny (native plugin)
-# Build: podman build -f ContainerFile --platform linux/amd64 --secret id=github_token,src=$HOME/.github-token -t ghcr.io/bjohns/tiny-container:latest .
+# tinycode-container: tinycode (web mode) + oh-my-tiny (native plugin)
+# Build: podman build -f ContainerFile --platform linux/amd64 --secret id=github_token,src=$HOME/.github-token -t ghcr.io/bjohns/tinycode-container:latest .
 # Multi-arch: podman build -f ContainerFile --platform linux/amd64,linux/arm64 ...
 
 ARG TARGETARCH

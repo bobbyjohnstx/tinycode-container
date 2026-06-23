@@ -1,5 +1,5 @@
 #!/bin/sh
-# Build tiny-container locally using source from sibling directories.
+# Build tinycode-container locally using source from sibling directories.
 # Copies source (excluding node_modules/.git) into a temp build context,
 # then runs podman build from there.
 set -e
@@ -7,9 +7,9 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 TINYCODE_SRC="${TINYCODE_SRC:-/Users/bjohns/projects/tinycode}"
 OH_MY_TINY_SRC="${OH_MY_TINY_SRC:-/Users/bjohns/projects/oh-my-tiny}"
-IMAGE_TAG="${IMAGE_TAG:-tiny-container:local}"
+IMAGE_TAG="${IMAGE_TAG:-tinycode-container:local}"
 
-BUILD_DIR="$(mktemp -d /tmp/tiny-container-build.XXXXXX)"
+BUILD_DIR="$(mktemp -d /tmp/tinycode-container-build.XXXXXX)"
 trap 'rm -rf "$BUILD_DIR"' EXIT
 
 echo "==> Build context: $BUILD_DIR"
