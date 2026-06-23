@@ -8,7 +8,14 @@ FROM registry.access.redhat.com/ubi9/ubi AS builder
 
 ARG TARGETARCH
 
-RUN dnf install -y git unzip make gcc gcc-c++ && dnf clean all
+RUN dnf install -y git unzip make gcc gcc-c++ libevent-devel ncurses-devel && dnf clean all
+
+# Compile tmux from source (not in UBI9 repos; builder has all required build tools)
+RUN curl -fsSL "https://github.com/tmux/tmux/releases/download/3.4/tmux-3.4.tar.gz" | \
+    tar xz -C /tmp && \
+    cd /tmp/tmux-3.4 && \
+    ./configure && make -j$(nproc) && cp tmux /usr/local/bin/tmux-static
+
 RUN curl -fsSL https://bun.sh/install | bash
 ENV PATH="/root/.bun/bin:$PATH"
 
@@ -46,10 +53,11 @@ RUN dnf install -y shadow-utils tar gzip && dnf clean all
 RUN useradd -u 1001 -r -g 0 -m -s /sbin/nologin tinycode && \
     dnf remove -y shadow-utils && dnf clean all
 
-# Install tmux via EPEL (not in standard UBI9 repos)
-RUN rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
-    dnf install -y tmux && \
-    dnf clean all
+# Install tmux runtime deps (libevent, ncurses are in standard UBI9 repos)
+RUN dnf install -y libevent ncurses && dnf clean all
+
+# Copy tmux binary compiled in builder stage
+COPY --from=builder /usr/local/bin/tmux-static /usr/bin/tmux
 
 COPY --from=builder /build/tinycode/packages/tinycode/dist/tinycode-linux-*/bin/tinycode /usr/local/bin/tinycode
 
