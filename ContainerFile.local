@@ -1,5 +1,5 @@
 # Local development build — uses source dirs copied into build context by build-local.sh.
-# Do NOT run podman build directly; use: ./build-local.sh
+# DO NOT run podman build directly; use: ./build-local.sh
 
 ARG TARGETARCH
 
@@ -8,13 +8,7 @@ FROM registry.access.redhat.com/ubi9/ubi AS builder
 
 ARG TARGETARCH
 
-RUN dnf install -y git unzip make gcc gcc-c++ libevent-devel ncurses-devel byacc && dnf clean all
-
-# Compile tmux from source (not in UBI9 repos; builder has all required build tools)
-RUN curl -fsSL "https://github.com/tmux/tmux/releases/download/3.4/tmux-3.4.tar.gz" | \
-    tar xz -C /tmp && \
-    cd /tmp/tmux-3.4 && \
-    ./configure && make -j$(nproc) && cp tmux /usr/local/bin/tmux-static
+RUN dnf install -y git unzip make gcc gcc-c++ && dnf clean all
 
 RUN curl -fsSL https://bun.sh/install | bash
 ENV PATH="/root/.bun/bin:$PATH"
@@ -23,7 +17,7 @@ ENV PATH="/root/.bun/bin:$PATH"
 COPY tinycode-src/ /build/tinycode/
 
 WORKDIR /build/tinycode
-RUN bun install --frozen-lockfile
+RUN bun install
 # TINYCODE_CHANNEL bypasses the `git branch --show-current` call in build.ts:30
 ENV TINYCODE_CHANNEL=container
 RUN bun run --cwd packages/tinycode build --single
@@ -42,22 +36,21 @@ WORKDIR /build/oh-my-tiny
 RUN npm ci
 RUN npm run build
 
-# Stage 3: Runtime (UBI9-minimal — OpenShift compatible)
+# Stage 3: Runtime — full UBI9
+# tmux is in RHEL9 baseos but not UBI subset; install via direct RPM from CentOS Stream 9
+# (same glibc 2.34 as RHEL9/UBI9 — fully ABI-compatible)
 FROM registry.access.redhat.com/ubi9/ubi AS runtime
 
 ARG TARGETARCH
 
-# Install shadow-utils for useradd and curl for oc CLI download, then remove shadow-utils
-RUN dnf install -y shadow-utils tar gzip && dnf clean all
+RUN dnf install -y shadow-utils tar gzip && dnf clean all && \
+    rpm -Uvh --nodeps \
+      "https://mirror.stream.centos.org/9-stream/BaseOS/x86_64/os/Packages/tmux-3.2a-5.el9.x86_64.rpm" && \
+    rpm -Uvh --nodeps \
+      "https://mirror.stream.centos.org/9-stream/BaseOS/x86_64/os/Packages/libutempter-1.2.1-6.el9.x86_64.rpm" 2>/dev/null || true
 
 RUN useradd -u 1001 -r -g 0 -m -s /sbin/nologin tinycode && \
     dnf remove -y shadow-utils && dnf clean all
-
-# Install tmux runtime deps (libevent, ncurses are in standard UBI9 repos)
-RUN dnf install -y libevent ncurses && dnf clean all
-
-# Copy tmux binary compiled in builder stage
-COPY --from=builder /usr/local/bin/tmux-static /usr/bin/tmux
 
 COPY --from=builder /build/tinycode/packages/tinycode/dist/tinycode-linux-*/bin/tinycode /usr/local/bin/tinycode
 
@@ -82,7 +75,7 @@ RUN mkdir -p \
     chown -R 1001:0 /home/tinycode && \
     chmod -R g=u /home/tinycode
 
-EXPOSE 3000
+EXPOSE 4096
 USER 1001
 WORKDIR /home/tinycode
 

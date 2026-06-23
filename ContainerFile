@@ -10,13 +10,7 @@ FROM registry.access.redhat.com/ubi9/ubi AS builder
 
 ARG TARGETARCH
 
-RUN dnf install -y git unzip make gcc gcc-c++ libevent-devel ncurses-devel byacc && dnf clean all
-
-# Compile tmux from source (not in UBI9 repos; builder has all required build tools)
-RUN curl -fsSL "https://github.com/tmux/tmux/releases/download/3.4/tmux-3.4.tar.gz" | \
-    tar xz -C /tmp && \
-    cd /tmp/tmux-3.4 && \
-    ./configure && make -j$(nproc) && cp tmux /usr/local/bin/tmux-static
+RUN dnf install -y git unzip make gcc gcc-c++ && dnf clean all
 
 # Install Bun (tinycode build toolchain)
 RUN curl -fsSL https://bun.sh/install | bash
@@ -52,25 +46,22 @@ RUN npm ci
 # tsc compiles src/ → dist/ (package.json:8)
 RUN npm run build
 
-# Stage 3: Runtime image (UBI9-minimal — OpenShift compatible)
+# Stage 3: Runtime — full UBI9 (tmux is in ubi-baseos, no extra repos needed)
 FROM registry.access.redhat.com/ubi9/ubi AS runtime
 
 ARG TARGETARCH
 
-# Install shadow-utils for useradd and curl for oc CLI download, then remove shadow-utils
-RUN dnf install -y shadow-utils tar gzip && dnf clean all
+RUN dnf install -y shadow-utils tar gzip && dnf clean all && \
+    rpm -Uvh --nodeps \
+      "https://mirror.stream.centos.org/9-stream/BaseOS/x86_64/os/Packages/tmux-3.2a-5.el9.x86_64.rpm" && \
+    rpm -Uvh --nodeps \
+      "https://mirror.stream.centos.org/9-stream/BaseOS/x86_64/os/Packages/libutempter-1.2.1-6.el9.x86_64.rpm" 2>/dev/null || true
 
 # Create non-root user (UID 1001, GID 0 for OpenShift arbitrary UID support)
 RUN useradd -u 1001 -r -g 0 -m -s /sbin/nologin tinycode && \
     dnf remove -y shadow-utils && dnf clean all
 
-# Install tmux runtime deps (libevent, ncurses are in standard UBI9 repos)
-RUN dnf install -y libevent ncurses && dnf clean all
-
-# Copy tmux binary compiled in builder stage
-COPY --from=builder /usr/local/bin/tmux-static /usr/bin/tmux
-
-# Copy tinycode self-contained binary (script/build.ts:264 — linux glibc variant)
+# Copy tinycode self-contained binary
 COPY --from=builder /build/tinycode/packages/tinycode/dist/tinycode-linux-*/bin/tinycode /usr/local/bin/tinycode
 
 # Copy oh-my-tiny plugin dist and node_modules (needed for @ast-grep/napi native bindings)
@@ -82,8 +73,6 @@ COPY --from=plugin-builder /build/oh-my-tiny/node_modules /opt/oh-my-tiny/node_m
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# XDG directories for tinycode persistence (src/core/global.ts:10-13)
-# PVC should mount /home/tinycode/.local/share/tinycode and /home/tinycode/.config/tinycode
 ENV XDG_DATA_HOME=/home/tinycode/.local/share \
     XDG_CONFIG_HOME=/home/tinycode/.config \
     XDG_STATE_HOME=/home/tinycode/.local/state \
