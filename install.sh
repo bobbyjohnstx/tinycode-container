@@ -1,9 +1,9 @@
 #!/bin/sh
 # Tinycode container installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/bjohns/tiny-container/main/install.sh | sh
+# Usage: curl -fsSL https://raw.githubusercontent.com/bobbyjohnstx/tinycode-container/main/install.sh | sh
 set -e
 
-IMAGE="ghcr.io/bjohns/tiny-container:latest"
+IMAGE="ghcr.io/bjohns/tinycode-container:latest"
 CONTAINER_NAME="tinycode"
 INSTALL_DIR="${HOME}/.local/bin"
 WRAPPER="${INSTALL_DIR}/tinycode"
@@ -52,7 +52,7 @@ cat > "$WRAPPER" << 'WRAPPER_EOF'
 #!/bin/sh
 set -e
 
-IMAGE="ghcr.io/bjohns/tiny-container:latest"
+IMAGE="ghcr.io/bjohns/tinycode-container:latest"
 CONTAINER_NAME="tinycode"
 
 # Detect container runtime
