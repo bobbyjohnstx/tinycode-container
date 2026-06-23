@@ -41,10 +41,15 @@ FROM registry.access.redhat.com/ubi9/ubi-minimal AS runtime
 ARG TARGETARCH
 
 # Install shadow-utils for useradd and curl for oc CLI download, then remove shadow-utils
-RUN microdnf install -y shadow-utils tar gzip tmux && microdnf clean all
+RUN microdnf install -y shadow-utils tar gzip && microdnf clean all
 
 RUN useradd -u 1001 -r -g 0 -m -s /sbin/nologin tinycode && \
     microdnf remove -y shadow-utils && microdnf clean all
+
+# Install tmux via EPEL (not in standard UBI9 repos)
+RUN rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
+    microdnf install -y tmux && \
+    microdnf clean all
 
 COPY --from=builder /build/tinycode/packages/tinycode/dist/tinycode-linux-*/bin/tinycode /usr/local/bin/tinycode
 
