@@ -8,7 +8,7 @@ FROM registry.access.redhat.com/ubi9/ubi AS builder
 
 ARG TARGETARCH
 
-RUN dnf install -y git unzip make gcc gcc-c++ libevent-devel ncurses-devel && dnf clean all
+RUN dnf install -y git unzip make gcc gcc-c++ libevent-devel ncurses-devel byacc && dnf clean all
 
 # Compile tmux from source (not in UBI9 repos; builder has all required build tools)
 RUN curl -fsSL "https://github.com/tmux/tmux/releases/download/3.4/tmux-3.4.tar.gz" | \
