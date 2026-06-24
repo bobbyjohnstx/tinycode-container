@@ -73,6 +73,10 @@ COPY --from=plugin-builder /build/oh-my-tiny/node_modules /opt/oh-my-tiny/node_m
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
+# Copy agent definitions and skills into the config directory
+COPY config/agent /home/tinycode/.config/tinycode/agent
+COPY config/skills /home/tinycode/.config/tinycode/skills
+
 ENV XDG_DATA_HOME=/home/tinycode/.local/share \
     XDG_CONFIG_HOME=/home/tinycode/.config \
     XDG_STATE_HOME=/home/tinycode/.local/state \
