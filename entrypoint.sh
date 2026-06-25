@@ -33,6 +33,17 @@ WORKDIR="${TINYCODE_WORKDIR:-/projects}"
 mkdir -p "$WORKDIR/.tinycode" 2>/dev/null || mkdir -p /home/tinycode/.tinycode 2>/dev/null || true
 mkdir -p /tmp/tinycode 2>/dev/null || true
 
+# Init a git repo in the workspace so tinycode detects it as the worktree.
+# Without this, worktree resolves to "/" (read-only) and swarm/skill dirs
+# get created at /.tinycode/ which fails with permission denied.
+if [ -d "$WORKDIR" ] && [ ! -d "$WORKDIR/.git" ] && command -v git >/dev/null 2>&1; then
+  cd "$WORKDIR"
+  git init -q 2>/dev/null || true
+  git config user.email "tinycode@container" 2>/dev/null || true
+  git config user.name "tinycode" 2>/dev/null || true
+fi
+mkdir -p /tmp/tinycode 2>/dev/null || true
+
 # Copy bundled agents and skills into the PVC-mounted config directory.
 # The PVC shadows /home/tinycode/.config/tinycode so files COPY'd into the image
 # at build time are hidden. This copies from a staging path (/opt/tinycode-defaults/)
