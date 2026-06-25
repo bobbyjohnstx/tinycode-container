@@ -71,6 +71,8 @@ ENV XDG_DATA_HOME=/home/tinycode/.local/share \
     XDG_CONFIG_HOME=/home/tinycode/.config \
     XDG_STATE_HOME=/home/tinycode/.local/state \
     XDG_CACHE_HOME=/home/tinycode/.cache \
+    HOME=/home/tinycode \
+    SHELL=/bin/sh \
     PATH="/home/tinycode/.local/bin:${PATH}"
 
 RUN mkdir -p \
