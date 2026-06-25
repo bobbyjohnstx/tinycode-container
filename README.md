@@ -41,13 +41,13 @@ echo $GITHUB_TOKEN > ~/.github-token
 # Build for the current architecture
 podman build -f ContainerFile \
   --secret id=github_token,src=$HOME/.github-token \
-  -t ghcr.io/bjohns/tinycode-container:latest .
+  -t quay.io/bjohns/tinycode-container:latest .
 
 # Build for a specific architecture
 podman build -f ContainerFile \
   --platform linux/arm64 \
   --secret id=github_token,src=$HOME/.github-token \
-  -t ghcr.io/bjohns/tinycode-container:latest .
+  -t quay.io/bjohns/tinycode-container:latest .
 ```
 
 The multi-stage build:
@@ -59,7 +59,7 @@ The multi-stage build:
 
 ```bash
 # Run the container in detached mode
-podman run -d -p 4096:4096 ghcr.io/bjohns/tinycode-container:latest
+podman run -d -p 4096:4096 quay.io/bjohns/tinycode-container:latest
 
 # Open the web UI
 open http://localhost:4096
@@ -72,7 +72,7 @@ podman run -d -p 4096:4096 \
   --name tinycode \
   -v tinycode-data:/home/tinycode/.local/share/tinycode \
   -v tinycode-config:/home/tinycode/.config/tinycode \
-  ghcr.io/bjohns/tinycode-container:latest
+  quay.io/bjohns/tinycode-container:latest
 ```
 
 ## Session Attach
@@ -165,12 +165,12 @@ Load order (lowest to highest priority): `config.json` → `tinycode.json` → `
 
 ## CI/CD
 
-The GitHub Actions workflow (`.github/workflows/build-push.yaml`) automatically builds and pushes multi-arch images to `ghcr.io/bjohns/tinycode-container` on every push to main:
+The GitHub Actions workflow (`.github/workflows/build-push.yaml`) automatically builds and pushes multi-arch images to `quay.io/bjohns/tinycode-container` on every push to main:
 
 - **Platforms:** `linux/amd64`, `linux/arm64`
 - **Tags:** `:latest` and `:<git-sha>`
 - **Smoke test:** Runs `tinycode --version` on both architectures
-- **Registry:** GitHub Container Registry (GHCR)
+- **Registries:** Quay.io (primary), GitHub Container Registry (mirror)
 - **Build:** Uses `docker/build-push-action` with QEMU for cross-compilation
 
 ## Features
