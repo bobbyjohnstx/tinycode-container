@@ -83,6 +83,6 @@ RUN mkdir -p \
 
 EXPOSE 4096
 USER 1001
-WORKDIR /home/tinycode
+WORKDIR /projects
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
