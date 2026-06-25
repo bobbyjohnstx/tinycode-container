@@ -1,6 +1,12 @@
 #!/bin/sh
 set -e
 
+# ── Fix OpenShift environment overrides ──────────────────────────────────────
+# OpenShift sets HOME=/ (read-only) and SHELL=/sbin/nologin (exits immediately).
+# Both break tmux: it can't write to HOME and spawned shells die instantly.
+export HOME="/home/tinycode"
+export SHELL="/bin/sh"
+
 # Write container defaults to config.json unconditionally on every start.
 # tinycode loads config in order: config.json -> tinycode.json -> tinycode.jsonc
 # (src/config/config.ts:484-486). Writing to the lowest-priority config.json
