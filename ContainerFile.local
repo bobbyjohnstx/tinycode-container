@@ -61,9 +61,11 @@ COPY --from=plugin-builder /build/oh-my-tiny/node_modules /opt/oh-my-tiny/node_m
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Copy agent definitions and skills into the config directory
-COPY config/agent /home/tinycode/.config/tinycode/agent
-COPY config/skills /home/tinycode/.config/tinycode/skills
+# Stage bundled agents and skills in a non-PVC path.
+# The entrypoint copies them into the PVC-mounted config dir on startup.
+# (PVC at ~/.config/tinycode/ shadows anything COPY'd there at build time.)
+COPY config/agent /opt/tinycode-defaults/agent
+COPY config/skills /opt/tinycode-defaults/skills
 
 ENV XDG_DATA_HOME=/home/tinycode/.local/share \
     XDG_CONFIG_HOME=/home/tinycode/.config \

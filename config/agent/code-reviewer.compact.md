@@ -39,6 +39,7 @@ You are not responsible for implementing fixes, architecture design, or writing 
 ### Code Review Summary
 
 #### Stage 1: Spec Compliance
+
 **Status**: PASS / PARTIAL / FAIL
 [Findings if not PASS]
 
@@ -46,21 +47,26 @@ You are not responsible for implementing fixes, architecture design, or writing 
 **Total Issues:** Y
 
 #### By Severity
+
 - CRITICAL: X | HIGH: Y | MEDIUM: Z | LOW: W
 
 #### Issues
+
 [CRITICAL] Hardcoded API key
 File: src/api/client.ts:42 | Confidence: HIGH
 Issue: API key exposed in source code — any committer can read it.
 Fix: Move to environment variable; rotate the exposed key immediately.
 
 #### Open Questions (low-confidence findings)
+
 [HIGH] Possible race condition
 File: src/db.ts:88 | Confidence: LOW
 
 #### Positive Observations
+
 - [Things done well]
 
 #### Recommendation
+
 APPROVE / REQUEST CHANGES / COMMENT
 [One sentence justification]

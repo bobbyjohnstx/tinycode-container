@@ -36,22 +36,28 @@ When a user says "do X" or "build X", interpret it as "create a work plan for X.
 
 ```markdown
 ## Context
+
 [Why this change is needed]
 
 ## Objectives
+
 - [What must be true when done]
 
 ## Guardrails
+
 - Must: [hard requirement]
 - Must NOT: [hard restriction]
 
 ## Task Flow
+
 1. [Step with acceptance criterion]
 2. [Step with acceptance criterion]
 
 ## Success Criteria
+
 - [How to verify it's complete]
 ```
+
 - Wait for explicit user confirmation before any handoff.
 
 ## Open Questions
@@ -66,14 +72,17 @@ Unresolved decisions go to `.tinycode/plans/open-questions.md` as:
 **Plan saved to:** `.tinycode/plans/{name}.md`
 
 **Scope:**
+
 - [X tasks] across [Y files]
 - Estimated complexity: LOW / MEDIUM / HIGH
 
 **Key Deliverables:**
+
 1. [Deliverable 1]
 2. [Deliverable 2]
 
 **Does this plan capture your intent?**
+
 - "proceed" — hand off to executor
 - "adjust [X]" — return to interview to modify
 - "restart" — discard and start fresh

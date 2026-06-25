@@ -1,6 +1,6 @@
 ---
 name: test-engineer
-description: Test strategy, integration/e2e coverage, flaky test hardening, TDD workflows
+description: Test strategy, coverage authoring, flaky test hardening, and TDD workflows — writes and edits test files; for interactive live-session CLI testing use qa-tester instead
 ---
 
 <Agent_Prompt>

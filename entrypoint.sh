@@ -19,6 +19,24 @@ cat > "$DEFAULTS_FILE" << 'EOF'
 }
 EOF
 
+# Copy bundled agents and skills into the PVC-mounted config directory.
+# The PVC shadows /home/tinycode/.config/tinycode so files COPY'd into the image
+# at build time are hidden. This copies from a staging path (/opt/tinycode-defaults/)
+# into the PVC on every startup, ensuring bundled defaults are always present.
+# User customizations in the PVC take priority (loaded after bundled defaults by tinycode).
+DEFAULTS_SRC="/opt/tinycode-defaults"
+if [ -d "$DEFAULTS_SRC/agent" ]; then
+  mkdir -p "$XDG_CONFIG_HOME/tinycode/agent"
+  cp -n "$DEFAULTS_SRC/agent/"*.md "$XDG_CONFIG_HOME/tinycode/agent/" 2>/dev/null || true
+fi
+if [ -d "$DEFAULTS_SRC/skills" ]; then
+  for skill_dir in "$DEFAULTS_SRC/skills"/*/; do
+    skill_name=$(basename "$skill_dir")
+    mkdir -p "$XDG_CONFIG_HOME/tinycode/skills/$skill_name"
+    cp -n "$skill_dir"SKILL.md "$XDG_CONFIG_HOME/tinycode/skills/$skill_name/" 2>/dev/null || true
+  done
+fi
+
 # ── oc CLI for cluster management mode ───────────────────────────────────────
 if [ "${TINYCODE_CLUSTER_ADMIN}" = "true" ]; then
   OC_BIN="/home/tinycode/.local/bin/oc"

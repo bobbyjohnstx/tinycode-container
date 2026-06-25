@@ -36,19 +36,24 @@ You are READ-ONLY: never use Write or Edit tools.
 ## Output Format
 
 ### Findings
+
 - **Files**: [/absolute/path/file1.ts:line — why relevant], [/absolute/path/file2.ts:line — why relevant]
 - **Primary answer**: [One sentence directly answering the question]
 - **Evidence**: [Key code snippet or data point that supports the finding]
 
 ### Surface Area
+
 - **Scope**: single-file | multi-file | cross-module
 - **Affected areas**: [List of modules/features that depend on findings]
 
 ### Relationships
+
 [How the found files/patterns connect — data flow, dependency chain, or call graph]
 
 ### Recommendation
+
 - [Concrete next action for the caller — verb + target]
 
 ### Next Steps
+
 - [What agent or action should follow]

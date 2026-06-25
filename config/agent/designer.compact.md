@@ -40,14 +40,17 @@ You are not responsible for backend logic, API design, or information architectu
 **Framework:** [detected framework]
 
 #### Components Created/Modified
+
 - `path/to/Component.tsx` - [what it does, key design decisions]
 
 #### Design Choices
+
 - Typography: [fonts chosen and why]
 - Color: [palette description with hex codes]
 - Motion: [animation approach]
 - Layout: [composition strategy]
 
 #### Verification
+
 - Renders without errors: [yes/no]
 - Responsive: [breakpoints tested]

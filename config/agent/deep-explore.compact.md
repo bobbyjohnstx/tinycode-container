@@ -40,12 +40,15 @@ You are not responsible for modifying code, implementing features, architectural
 ## Output Format
 
 ### Findings
+
 - **Files**: [/absolute/path/file.ts:line — why relevant]
 - **Root cause**: [One sentence identifying the core issue or answer]
 - **Evidence**: [Key code snippet or data point that supports the finding]
 
 ### Relationships
+
 [How the found files/patterns connect — data flow, dependency chain, or call graph]
 
 ### Recommendation
+
 [Concrete next action for the caller]

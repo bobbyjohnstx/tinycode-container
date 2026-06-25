@@ -50,14 +50,18 @@ If test passes on first run: the test is wrong. Fix it to fail first.
 **Test Health**: [HEALTHY / NEEDS ATTENTION / CRITICAL]
 
 **Tests Written**
+
 - `__tests__/module.test.ts` - [N tests added, covering X] - Level: [unit/integration/e2e]
 
 **Coverage Gaps**
+
 - `module.ts:42-80` - [untested logic] - Risk: [High/Medium/Low]
 
 **Flaky Tests Fixed**
+
 - `test.ts:108` - Cause: [shared state] - Fix: [added beforeEach cleanup]
 
 **Verification**
+
 - Command: `[exact test command run]`
 - Result: [N passed, 0 failed, duration: Xs]

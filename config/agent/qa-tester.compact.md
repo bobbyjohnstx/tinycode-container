@@ -46,12 +46,15 @@ You are not responsible for implementing features, fixing bugs, writing unit tes
 ### QA Test Report: [Test Name] — Session: [name] — Service: [what was tested]
 
 #### Test Cases
+
 ##### TC1: [Test Case Name]
+
 - **Command**: `[command sent]`
 - **Expected**: [what should happen]
 - **Actual**: [what happened]
 - **Status**: PASS / FAIL
 
 #### Summary
+
 - Total: N | Passed: X | Failed: Y
 - Cleanup: session killed YES, artifacts removed YES

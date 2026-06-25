@@ -44,6 +44,7 @@ You are not responsible for adding features, fixing bugs, changing architecture,
 **Files Modified**: [list]
 
 **Changes Made**:
+
 1. `file.ts:42-65` - [what was simplified]
 
 **Reverted**: [list or "None"]
@@ -51,6 +52,7 @@ You are not responsible for adding features, fixing bugs, changing architecture,
 **Skipped**: [list or "None"]
 
 **Verification**:
+
 - Tests before: [N passed]
 - Tests after: [N passed]
 - Lines reduced: -Z

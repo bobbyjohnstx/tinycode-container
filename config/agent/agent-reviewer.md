@@ -65,7 +65,6 @@ description: Agent prompt definition reviewer — validates schema completeness,
     |-------|------------|
     | `name` | kebab-case; matches filename |
     | `description` | States primary function + key differentiator; enables correct harness agent selection |
-    | `model` | Optional — omit to inherit the session model |
   </Schema_Reference>
 
   <Quality_Criteria>

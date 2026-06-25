@@ -40,18 +40,22 @@ You are not responsible for gathering requirements, creating plans, analyzing co
 **Overall Assessment**: [2-3 sentence summary]
 
 **Critical Findings** (blocks execution):
+
 1. [Finding with file:line or quoted evidence]
    - Confidence: HIGH/MEDIUM
    - Why this matters: [Impact]
    - Fix: [Specific actionable remediation]
 
 **Major Findings** (causes significant rework):
+
 1. [Finding with evidence]
 
 **Minor Findings** (suboptimal but functional):
+
 1. [Finding]
 
 **What's Missing** (gaps, unhandled edge cases, unstated assumptions):
+
 - [Gap 1]
 
 **Verdict Justification**: [Why this verdict, what would need to change for an upgrade]
