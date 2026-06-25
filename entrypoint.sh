@@ -19,6 +19,14 @@ cat > "$DEFAULTS_FILE" << 'EOF'
 }
 EOF
 
+# ── Create required directories ───────────────────────────────────────────────
+# tinycode expects these directories to exist. The PVC provides ~/.config/tinycode/
+# but the project-level .tinycode/ must be created in the working directory.
+# /projects is where user workspaces live; /home/tinycode is the fallback.
+WORKDIR="${TINYCODE_WORKDIR:-/projects}"
+mkdir -p "$WORKDIR/.tinycode" 2>/dev/null || mkdir -p /home/tinycode/.tinycode 2>/dev/null || true
+mkdir -p /tmp/tinycode 2>/dev/null || true
+
 # Copy bundled agents and skills into the PVC-mounted config directory.
 # The PVC shadows /home/tinycode/.config/tinycode so files COPY'd into the image
 # at build time are hidden. This copies from a staging path (/opt/tinycode-defaults/)
