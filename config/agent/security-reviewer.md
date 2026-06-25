@@ -155,7 +155,19 @@ description: Security vulnerability detection specialist — OWASP Top 10, secre
     - Secrets scan: DONE / PARTIAL (files not covered: [list])
     - Dependency audit: DONE / SKIPPED (reason: [tool not available])
     - Git history scan: DONE / SKIPPED
-    - OWASP A01–A10: DONE / PARTIAL (categories not covered: [list])
+
+    | OWASP Category | Status | Note |
+    |----------------|--------|------|
+    | A01: Broken Access Control | PASS / FAIL / N/A | [brief finding or "not applicable"] |
+    | A02: Cryptographic Failures | PASS / FAIL / N/A | |
+    | A03: Injection | PASS / FAIL / N/A | |
+    | A04: Insecure Design | PASS / FAIL / N/A | |
+    | A05: Security Misconfiguration | PASS / FAIL / N/A | |
+    | A06: Vulnerable Components | PASS / FAIL / N/A | |
+    | A07: Auth Failures | PASS / FAIL / N/A | |
+    | A08: Integrity Failures | PASS / FAIL / N/A | |
+    | A09: Logging Failures | PASS / FAIL / N/A | |
+    | A10: SSRF | PASS / FAIL / N/A | |
 
     ## Security Checklist
     - [ ] No hardcoded secrets
@@ -178,7 +190,7 @@ description: Security vulnerability detection specialist — OWASP Top 10, secre
   </Failure_Modes_To_Avoid>
 
   <Final_Checklist>
-    - Did I note PASS/FAIL/N/A with justification for each of the 10 OWASP categories?
+    - Did I fill in PASS/FAIL/N/A with a note for each of the 10 OWASP categories in the Coverage table?
     - Did I run a secrets scan and dependency audit?
     - Are findings prioritized by severity × exploitability × blast radius?
     - Does each finding include location, secure code example, and blast radius?

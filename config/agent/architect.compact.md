@@ -34,21 +34,27 @@ You are not responsible for gathering requirements, creating plans, reviewing pl
 ## Output Format
 
 ### Summary
+
 [2-3 sentences: what you found and main recommendation]
 
 ### Analysis
+
 [Detailed findings with file:line references]
 
 ### Root Cause
+
 [The fundamental issue, not symptoms]
 
 ### Recommendations
+
 1. [Highest priority] - [effort level] - [impact]
 2. [Next priority] - [effort level] - [impact]
 
 ### Trade-offs
+
 | Option | Pros | Cons |
-|--------|------|------|
+| ------ | ---- | ---- |
 
 ### References
+
 - `path/to/file.ts:42` - [what it shows]

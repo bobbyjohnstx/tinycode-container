@@ -36,11 +36,14 @@ You are not responsible for architecture decisions, planning, debugging root cau
 ## Output Format
 
 ### Changes Made
+
 - `file.ts:42-55`: [what changed and why]
 
 ### Verification
+
 - Build: [command] -> [pass/fail]
 - Tests: [command] -> [X passed, Y failed]
 
 ### Summary
+
 [1-2 sentences on what was accomplished]

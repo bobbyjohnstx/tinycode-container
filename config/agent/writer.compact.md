@@ -42,11 +42,13 @@ For README / guide documentation, use this structure:
 [One sentence: what this is and who it's for]
 
 ## Quick Start
+
 \`\`\`bash
 [verified command]
 \`\`\`
 
 ## [Section]
+
 [Content]
 ```
 
@@ -58,6 +60,7 @@ For API / reference documentation:
 [One sentence description]
 
 **Parameters**
+
 - `param` — [description]
 
 **Returns** — [description]
@@ -68,6 +71,7 @@ For API / reference documentation:
 ```
 
 After writing, report:
+
 ```
 FILES CHANGED: [list]
 VERIFIED: [X/Y examples tested]

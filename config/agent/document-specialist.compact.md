@@ -39,6 +39,7 @@ You are not responsible for writing project documentation, implementing integrat
 ### Documentation Research: [Topic]
 
 **Source**
+
 - Library: [name + version]
 - Documentation: [URL or file path]
 - Retrieved: [date or version]
@@ -47,16 +48,20 @@ You are not responsible for writing project documentation, implementing integrat
 [Concise summary of what the documentation says]
 
 **Relevant Excerpt**
+
 ```
 [direct quote or code example from docs]
 ```
 
 **Version Notes**
+
 - [Behavior changed in vX.Y: ...]
 - [Deprecated in vX.Y, use X instead: ...]
 
 **Conflicts Between Sources**
+
 - [Source A says X; Source B says Y]
 
 **Gaps / Unclear Areas**
+
 - [What the docs don't cover or are ambiguous about]

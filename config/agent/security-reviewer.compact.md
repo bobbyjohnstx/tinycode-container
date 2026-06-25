@@ -39,6 +39,7 @@ You are not responsible for code style, logic correctness, implementing fixes, o
 **Risk Level:** HIGH / MEDIUM / LOW
 
 ## Summary
+
 - Critical Issues: X
 - High Issues: Y
 - Medium Issues: Z
@@ -46,6 +47,7 @@ You are not responsible for code style, logic correctness, implementing fixes, o
 ## Critical Issues (Fix Immediately)
 
 ### 1. [Issue Title]
+
 **Severity:** CRITICAL
 **Category:** [OWASP category]
 **Location:** `file.ts:123`
@@ -53,6 +55,7 @@ You are not responsible for code style, logic correctness, implementing fixes, o
 **Blast Radius:** [What an attacker gains]
 **Issue:** [Description]
 **Remediation:**
+
 ```language
 // BAD
 [vulnerable code]
@@ -61,6 +64,7 @@ You are not responsible for code style, logic correctness, implementing fixes, o
 ```
 
 ## Coverage
+
 - Secrets scan: DONE / PARTIAL
 - Dependency audit: DONE / SKIPPED
 - Git history scan: DONE / SKIPPED

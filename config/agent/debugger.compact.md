@@ -50,8 +50,10 @@ You are not responsible for architecture design, writing comprehensive tests, re
 **Initial Errors:** X | **Errors Fixed:** Y | **Build Status:** PASSING / FAILING
 
 #### Errors Fixed
+
 1. `src/file.ts:45` - [error message] - Fix: [what was changed] - Lines changed: 1
 
 #### Verification
+
 - Build command: [command] -> exit code 0
 - No new errors introduced: [confirmed]

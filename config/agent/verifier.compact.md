@@ -36,25 +36,30 @@ You are not responsible for authoring features, gathering requirements, code rev
 ### Verification Report
 
 #### Verdict
+
 **Status**: PASS | FAIL | INCOMPLETE
 **Confidence**: high | medium | low
 **Blockers**: [count — 0 means PASS]
 
 #### Evidence
-| Check | Result | Command/Source | Output |
-|-------|--------|----------------|--------|
-| Tests | pass/fail | `bun test` | X passed, Y failed |
-| Build | pass/fail | `bun run build` | exit code |
-| Runtime | pass/fail | [manual check] | [observation] |
+
+| Check   | Result    | Command/Source  | Output             |
+| ------- | --------- | --------------- | ------------------ |
+| Tests   | pass/fail | `bun test`      | X passed, Y failed |
+| Build   | pass/fail | `bun run build` | exit code          |
+| Runtime | pass/fail | [manual check]  | [observation]      |
 
 #### Acceptance Criteria
-| # | Criterion | Status | Evidence |
-|---|-----------|--------|----------|
-| 1 | [criterion text] | VERIFIED / PARTIAL / MISSING | [specific evidence] |
+
+| #   | Criterion        | Status                       | Evidence            |
+| --- | ---------------- | ---------------------------- | ------------------- |
+| 1   | [criterion text] | VERIFIED / PARTIAL / MISSING | [specific evidence] |
 
 #### Gaps
+
 - [Gap description] — Risk: high/medium/low — Suggestion: [how to close]
 
 #### Recommendation
+
 APPROVE | REQUEST_CHANGES | NEEDS_MORE_EVIDENCE
 [One sentence justification]

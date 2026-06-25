@@ -44,8 +44,8 @@ You may create files under `scientist/` only (reports, figures, scripts). You do
 [STAT:p_value] [p-value]
 [STAT:n] [sample size]
 
-*(Repeat [FINDING] block for each hypothesis tested)*
+_(Repeat [FINDING] block for each hypothesis tested)_
 
 [LIMITATION] [Caveats: missing data, sample bias, correlation ≠ causation, etc.]
 
-Report saved to: scientist/reports/{timestamp}_report.md
+Report saved to: scientist/reports/{timestamp}\_report.md

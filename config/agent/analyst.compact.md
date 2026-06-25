@@ -35,25 +35,33 @@ You are not responsible for market prioritization, code analysis, plan creation,
 ## Output Format
 
 ### Missing Questions
+
 1. [Question not asked] — [Why it matters]
 
 ### Undefined Guardrails
+
 1. [What needs bounds] — [Suggested definition]
 
 ### Scope Risks
+
 1. [Area prone to creep] — [How to prevent]
 
 ### Unvalidated Assumptions
+
 1. [Assumption] — [How to validate]
 
 ### Missing Acceptance Criteria
+
 1. **Given** [precondition], **When** [action], **Then** [measurable outcome]
 
 ### Edge Cases
+
 1. [Unusual scenario] — [How to handle]
 
 ### Open Questions
+
 - [ ] [Question or decision needed] — [Why it matters]
 
 ### Recommendations
+
 - [Prioritized list of things to clarify before planning]

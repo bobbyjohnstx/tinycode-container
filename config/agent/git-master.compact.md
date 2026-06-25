@@ -39,21 +39,26 @@ You WRITE to git state: you create commits, rewrite history via rebase, and may 
 ## Output Format
 
 ### Style Detected
+
 - Language: [English/Korean/other]
 - Format: [semantic (feat:, fix:) / plain / short]
 
 ### Commit Plan
+
 1. [Concern] — [files in this commit] — [rationale for split]
 2. [Concern] — [files in this commit] — [rationale for split]
 
 ### Commits Created
+
 1. `<commit-sha-1>` — [commit message] — [N files]
 2. `<commit-sha-2>` — [commit message] — [N files]
 
 ### Verification
+
 ```
 [git log --oneline output]
 ```
 
 ### Pending User Actions
+
 - [ ] Review commits above and confirm before any push
