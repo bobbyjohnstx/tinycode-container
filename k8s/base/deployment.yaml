@@ -32,6 +32,18 @@ spec:
               name: tinycode-auth
               key: server-password
               optional: true
+        # vLLM configuration (issue #4)
+        # - name: TINYCODE_VLLM_URL
+        #   value: "http://vllm-service.default.svc.cluster.local:8000"
+        # - name: TINYCODE_VLLM_MODEL
+        #   value: "meta-llama/Llama-3.1-70B-Instruct"
+        # GitOps configuration (issue #8)
+        # - name: TINYCODE_GIT_REPO
+        #   value: "https://github.com/org/repo.git"
+        # - name: TINYCODE_GIT_BRANCH
+        #   value: "main"
+        # - name: TINYCODE_GIT_PULL_ON_RESTART
+        #   value: "true"
         resources:
           requests:
             memory: "256Mi"

@@ -52,6 +52,16 @@ must stay in sync with these values.
 | `TINYCODE_DISABLE_LSP_DOWNLOAD` | `1` (recommended in containers) | Skip LSP binary auto-download |
 | `TINYCODE_SESSION_ID` | *(none)* | Attach to existing session on start |
 | `OPENROUTER_API_KEY` | *(none)* | OpenRouter API key for cost tracking and balance display |
+| **vLLM Configuration** | | |
+| `TINYCODE_VLLM_URL` | *(none)* | vLLM endpoint (bridged to `TINYCODE_VLLM_HOST`) |
+| `TINYCODE_VLLM_MODEL` | *(none)* | Default model for vLLM (written to config.json) |
+| **GitOps Configuration** | | |
+| `TINYCODE_GIT_REPO` | *(none)* | Git repo URL to clone into `/projects` on startup |
+| `TINYCODE_GIT_BRANCH` | *(default branch)* | Branch to clone |
+| `TINYCODE_GIT_PULL_ON_RESTART` | `false` | Pull latest on restart if repo exists |
+| `TINYCODE_GIT_CLONE_TIMEOUT` | `300` | Clone timeout in seconds |
+| **In-Cluster Auto-Detection** | | |
+| `TINYCODE_AUTO_DETECT` | `true` | Auto-detect Kubernetes environment (disables LSP downloads) |
 
 ## Included Tools
 
@@ -60,11 +70,36 @@ must stay in sync with these values.
 ## Startup Behaviour
 
 The container ENTRYPOINT is `entrypoint.sh` which:
-1. Writes container defaults to `$XDG_CONFIG_HOME/tinycode/config.json` (lowest-priority config)
-2. Sets `TINYCODE_OLLAMA_HOST` if not already set
-3. Runs `tinycode web --hostname 0.0.0.0` (or attaches to `TINYCODE_SESSION_ID`)
+1. Sets `HOME=/home/tinycode` and `SHELL=/bin/sh` (OpenShift compatibility)
+2. Bridges `TINYCODE_VLLM_URL` → `TINYCODE_VLLM_HOST`
+3. Auto-detects Kubernetes environment (sets `TINYCODE_DISABLE_LSP_DOWNLOAD=1` in-cluster)
+4. Writes container defaults to `$XDG_CONFIG_HOME/tinycode/config.json` (lowest-priority config)
+   - Includes `"model"` field if `TINYCODE_VLLM_MODEL` is set
+5. GitOps mode: clones `TINYCODE_GIT_REPO` into `/projects` (or pulls if already exists)
+6. Initializes git repo in `/projects` if not present
+7. Copies bundled agents/skills from `/opt/tinycode-defaults/` into PVC
+8. Downloads `oc` CLI if `TINYCODE_CLUSTER_ADMIN=true`
+9. Runs `tinycode web --hostname 0.0.0.0` (or attaches to `TINYCODE_SESSION_ID`)
 
 User config in `tinycode.jsonc` (PVC-persisted) is never overwritten by the entrypoint.
+
+### GitOps Mode Details
+
+When `TINYCODE_GIT_REPO` is set:
+- **First run**: Clones the repo into `/projects`
+- **Subsequent runs**:
+  - If `/projects/.git` exists with a remote URL: skips clone (preserves local changes)
+  - If `TINYCODE_GIT_PULL_ON_RESTART=true`: runs `git pull --ff-only`
+  - If `/projects/.git` exists but has no remote: deletes `.git` and clones fresh
+- **Credentials**: Mount `.git-credentials` or `.netrc` at `/home/tinycode/` for private repos
+- **Timeout**: Clone operation times out after `TINYCODE_GIT_CLONE_TIMEOUT` seconds (default 300)
+
+### In-Cluster Auto-Detection
+
+When `KUBERNETES_SERVICE_HOST` is detected (and `TINYCODE_AUTO_DETECT != "false"`):
+- Sets `TINYCODE_DISABLE_LSP_DOWNLOAD=1` (air-gapped default)
+- Logs vLLM endpoint if configured, otherwise logs "auto-discovery via Kubernetes services"
+- Detection can be disabled with `TINYCODE_AUTO_DETECT=false`
 
 ## XDG Base Directories
 
