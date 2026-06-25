@@ -18,12 +18,44 @@ export SHELL="/bin/sh"
 # Override via TINYCODE_OLLAMA_HOST env var for k8s or custom Ollama locations.
 export TINYCODE_OLLAMA_HOST="${TINYCODE_OLLAMA_HOST:-http://host.containers.internal:11434}"
 
+# Bridge TINYCODE_VLLM_URL to TINYCODE_VLLM_HOST (tinycode core's native env var)
+if [ -n "${TINYCODE_VLLM_URL:-}" ] && [ -z "${TINYCODE_VLLM_HOST:-}" ]; then
+  export TINYCODE_VLLM_HOST="$TINYCODE_VLLM_URL"
+fi
+
+# In-cluster auto-detection
+if [ -n "${KUBERNETES_SERVICE_HOST:-}" ] && [ "${TINYCODE_AUTO_DETECT:-true}" != "false" ]; then
+  echo "[tinycode] Running in-cluster (Kubernetes detected)"
+
+  # Disable LSP download in air-gapped environments
+  if [ -z "${TINYCODE_DISABLE_LSP_DOWNLOAD:-}" ]; then
+    export TINYCODE_DISABLE_LSP_DOWNLOAD=1
+    echo "[tinycode] LSP download disabled (in-cluster default)"
+  fi
+
+  # Log discovery mode
+  if [ -n "${TINYCODE_VLLM_HOST:-}" ]; then
+    echo "[tinycode] vLLM endpoint: $TINYCODE_VLLM_HOST"
+  else
+    echo "[tinycode] vLLM: auto-discovery via Kubernetes services"
+  fi
+fi
+
 DEFAULTS_FILE="$XDG_CONFIG_HOME/tinycode/config.json"
-cat > "$DEFAULTS_FILE" << 'EOF'
+if [ -n "${TINYCODE_VLLM_MODEL:-}" ]; then
+  cat > "$DEFAULTS_FILE" << EOF
+{
+  "plugin": ["/opt/oh-my-tiny"],
+  "model": "$TINYCODE_VLLM_MODEL"
+}
+EOF
+else
+  cat > "$DEFAULTS_FILE" << 'EOF'
 {
   "plugin": ["/opt/oh-my-tiny"]
 }
 EOF
+fi
 
 # ── Create required directories ───────────────────────────────────────────────
 # tinycode expects these directories to exist. The PVC provides ~/.config/tinycode/
@@ -33,12 +65,50 @@ WORKDIR="${TINYCODE_WORKDIR:-/projects}"
 mkdir -p "$WORKDIR/.tinycode" 2>/dev/null || mkdir -p /home/tinycode/.tinycode 2>/dev/null || true
 mkdir -p /tmp/tinycode 2>/dev/null || true
 
+# GitOps mode: clone/pull repo into /projects
+if [ -n "${TINYCODE_GIT_REPO:-}" ]; then
+  CLONE_DIR="/projects"
+  GIT_BRANCH="${TINYCODE_GIT_BRANCH:-}"
+  GIT_TIMEOUT="${TINYCODE_GIT_CLONE_TIMEOUT:-300}"
+
+  # Configure credentials if available
+  if [ -f "/home/tinycode/.git-credentials" ]; then
+    git config --global credential.helper "store --file=/home/tinycode/.git-credentials"
+  elif [ -f "/home/tinycode/.netrc" ]; then
+    :  # git uses .netrc automatically
+  fi
+
+  if [ -d "$CLONE_DIR/.git" ]; then
+    REMOTE_URL=$(cd "$CLONE_DIR" && git remote get-url origin 2>/dev/null || echo "")
+    if [ -z "$REMOTE_URL" ]; then
+      # Empty init repo — remove and clone fresh
+      echo "[tinycode] Removing empty init repo, cloning $TINYCODE_GIT_REPO..."
+      rm -rf "$CLONE_DIR/.git"
+      timeout "$GIT_TIMEOUT" git clone --depth 1 \
+        ${GIT_BRANCH:+--branch "$GIT_BRANCH"} \
+        "$TINYCODE_GIT_REPO" "$CLONE_DIR" || echo "[tinycode] WARNING: Git clone failed — starting with empty /projects"
+    elif [ "${TINYCODE_GIT_PULL_ON_RESTART:-false}" = "true" ]; then
+      echo "[tinycode] Pulling latest from ${GIT_BRANCH:-default branch}..."
+      cd "$CLONE_DIR" && git pull --ff-only || echo "[tinycode] WARNING: Git pull failed (likely local changes). Skipping."
+      cd /
+    else
+      echo "[tinycode] Repo exists, pull on restart disabled. Skipping."
+    fi
+  else
+    echo "[tinycode] Cloning $TINYCODE_GIT_REPO (branch: ${GIT_BRANCH:-default})..."
+    timeout "$GIT_TIMEOUT" git clone --depth 1 \
+      ${GIT_BRANCH:+--branch "$GIT_BRANCH"} \
+      "$TINYCODE_GIT_REPO" "$CLONE_DIR" || echo "[tinycode] WARNING: Git clone failed — starting with empty /projects"
+  fi
+fi
+
 # Init a git repo in the workspace so tinycode detects it as the worktree.
 # Without this, worktree resolves to "/" (read-only) and swarm/skill dirs
 # get created at /.tinycode/ which fails with permission denied.
 if [ -d "$WORKDIR" ] && command -v git >/dev/null 2>&1; then
   # Mark workspace as safe regardless of UID mismatch (OpenShift assigns random UIDs)
   git config --global --add safe.directory "$WORKDIR" 2>/dev/null || true
+  # Only init if .git doesn't exist (skip if GitOps mode already cloned)
   if [ ! -d "$WORKDIR/.git" ]; then
     cd "$WORKDIR"
     git init -q 2>/dev/null || true
