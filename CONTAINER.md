@@ -46,15 +46,17 @@ must stay in sync with these values.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
+| **Core Configuration** | | |
 | `TINYCODE_SERVER_PASSWORD` | *(none — unauthenticated)* | Server auth password |
-| `TINYCODE_OLLAMA_HOST` | `http://host.containers.internal:11434` | Ollama endpoint |
 | `TINYCODE_PORT` | `4096` | Override server port |
-| `TINYCODE_DISABLE_LSP_DOWNLOAD` | `1` (recommended in containers) | Skip LSP binary auto-download |
 | `TINYCODE_SESSION_ID` | *(none)* | Attach to existing session on start |
-| `OPENROUTER_API_KEY` | *(none)* | OpenRouter API key for cost tracking and balance display |
-| **vLLM Configuration** | | |
+| `TINYCODE_WORKDIR` | `/projects` | Working directory for projects (fallback: `/home/tinycode`) |
+| **LLM Providers** | | |
+| `TINYCODE_OLLAMA_HOST` | `http://host.containers.internal:11434` | Ollama endpoint |
 | `TINYCODE_VLLM_URL` | *(none)* | vLLM endpoint (bridged to `TINYCODE_VLLM_HOST`) |
+| `TINYCODE_VLLM_HOST` | *(none)* | vLLM endpoint (native tinycode env var) |
 | `TINYCODE_VLLM_MODEL` | *(none)* | Default model for vLLM (written to config.json) |
+| `OPENROUTER_API_KEY` | *(none)* | OpenRouter API key for cost tracking and balance display |
 | **GitOps Configuration** | | |
 | `TINYCODE_GIT_REPO` | *(none)* | Git repo URL to clone into `/projects` on startup |
 | `TINYCODE_GIT_BRANCH` | *(default branch)* | Branch to clone |
@@ -63,10 +65,14 @@ must stay in sync with these values.
 | **Cluster Management** | | |
 | `TINYCODE_CLUSTER_ADMIN` | `false` | Enable cluster-admin agent (downloads oc CLI and mounts kubeconfig) |
 | `TINYCODE_OC_VERSION` | `stable` | oc CLI version to download (e.g., `4.17` for reproducibility) |
-| **In-Cluster Auto-Detection** | | |
+| **Auto-Detection** | | |
 | `TINYCODE_AUTO_DETECT` | `true` | Auto-detect Kubernetes environment (disables LSP downloads) |
-| **Workspace Configuration** | | |
-| `TINYCODE_WORKDIR` | `/projects` | Working directory for projects (fallback: `/home/tinycode`) |
+| `TINYCODE_DISABLE_LSP_DOWNLOAD` | `1` (recommended in containers) | Skip LSP binary auto-download |
+| **Operator-Injected** | | |
+| `TINYCODE_CONFIG_CONTENT` | *(none)* | Operator-injected config content (not directly set by users) |
+| `TINYCODE_DISCOVERY_NAMESPACES` | *(none)* | Comma-separated list of namespaces for service discovery (operator-managed) |
+| **Output (Set by Entrypoint)** | | |
+| `TINYCODE_CLUSTER_TYPE` | *(auto-detected)* | Set to `openshift` or `kubernetes` when `TINYCODE_CLUSTER_ADMIN=true` |
 
 ## Included Tools
 
