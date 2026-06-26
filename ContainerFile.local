@@ -44,6 +44,7 @@ FROM registry.access.redhat.com/ubi9/ubi AS runtime
 ARG TARGETARCH
 
 RUN dnf install -y shadow-utils tar gzip git-core && dnf clean all && \
+    rpm --import https://www.centos.org/keys/RPM-GPG-KEY-CentOS-Official && \
     rpm -Uvh --nodeps \
       "https://mirror.stream.centos.org/9-stream/BaseOS/x86_64/os/Packages/tmux-3.2a-5.el9.x86_64.rpm" && \
     rpm -Uvh --nodeps \

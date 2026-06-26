@@ -70,6 +70,7 @@ spec:
           failureThreshold: 3
         securityContext:
           allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
           capabilities:
             drop: [ALL]
           seccompProfile:
@@ -81,7 +82,11 @@ spec:
         - name: tinycode-data
           mountPath: /home/tinycode/.config/tinycode
           subPath: config
+        - name: tmp
+          mountPath: /tmp
       volumes:
       - name: tinycode-data
         persistentVolumeClaim:
           claimName: tinycode-data
+      - name: tmp
+        emptyDir: {}
