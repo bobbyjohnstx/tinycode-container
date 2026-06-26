@@ -4,6 +4,8 @@
 # Multi-arch: podman build -f ContainerFile --platform linux/amd64,linux/arm64 ...
 
 ARG TARGETARCH
+ARG TINYCODE_REF=main
+ARG OMT_REF=main
 
 # Stage 1: Build tinycode binary
 FROM registry.access.redhat.com/ubi9/ubi AS builder
@@ -21,6 +23,8 @@ RUN --mount=type=secret,id=github_token \
     git clone https://$(cat /run/secrets/github_token)@github.com/bobbyjohnstx/tinycode.git /build/tinycode
 
 WORKDIR /build/tinycode
+ARG TINYCODE_REF
+RUN git checkout $TINYCODE_REF
 RUN bun install --frozen-lockfile
 # Build single self-contained binary (script/build.ts:263 — Bun compile)
 RUN bun run --cwd packages/tinycode build --single
@@ -41,6 +45,8 @@ RUN --mount=type=secret,id=github_token \
     git clone https://$(cat /run/secrets/github_token)@github.com/bobbyjohnstx/oh-my-tiny.git /build/oh-my-tiny
 
 WORKDIR /build/oh-my-tiny
+ARG OMT_REF
+RUN git checkout $OMT_REF
 # npm ci installs platform-specific @ast-grep/napi native bindings
 RUN npm ci
 # tsc compiles src/ → dist/ (package.json:8)
@@ -51,12 +57,13 @@ FROM registry.access.redhat.com/ubi9/ubi AS runtime
 
 ARG TARGETARCH
 
-RUN dnf install -y shadow-utils tar gzip && dnf clean all && \
+RUN dnf install -y shadow-utils tar gzip git-core && dnf clean all && \
+    ARCH=$(uname -m) && \
     rpm --import https://www.centos.org/keys/RPM-GPG-KEY-CentOS-Official && \
     rpm -Uvh --nodeps \
-      "https://mirror.stream.centos.org/9-stream/BaseOS/x86_64/os/Packages/tmux-3.2a-5.el9.x86_64.rpm" && \
+      "https://mirror.stream.centos.org/9-stream/BaseOS/${ARCH}/os/Packages/tmux-3.2a-5.el9.${ARCH}.rpm" && \
     rpm -Uvh --nodeps \
-      "https://mirror.stream.centos.org/9-stream/BaseOS/x86_64/os/Packages/libutempter-1.2.1-6.el9.x86_64.rpm" 2>/dev/null || true
+      "https://mirror.stream.centos.org/9-stream/BaseOS/${ARCH}/os/Packages/libutempter-1.2.1-6.el9.${ARCH}.rpm" 2>/dev/null || true
 
 # Create non-root user (UID 1001, GID 0 for OpenShift arbitrary UID support)
 RUN useradd -u 1001 -r -g 0 -m -s /sbin/nologin tinycode && \

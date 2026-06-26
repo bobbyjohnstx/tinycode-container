@@ -44,11 +44,12 @@ FROM registry.access.redhat.com/ubi9/ubi AS runtime
 ARG TARGETARCH
 
 RUN dnf install -y shadow-utils tar gzip git-core && dnf clean all && \
+    ARCH=$(uname -m) && \
     rpm --import https://www.centos.org/keys/RPM-GPG-KEY-CentOS-Official && \
     rpm -Uvh --nodeps \
-      "https://mirror.stream.centos.org/9-stream/BaseOS/x86_64/os/Packages/tmux-3.2a-5.el9.x86_64.rpm" && \
+      "https://mirror.stream.centos.org/9-stream/BaseOS/${ARCH}/os/Packages/tmux-3.2a-5.el9.${ARCH}.rpm" && \
     rpm -Uvh --nodeps \
-      "https://mirror.stream.centos.org/9-stream/BaseOS/x86_64/os/Packages/libutempter-1.2.1-6.el9.x86_64.rpm" 2>/dev/null || true
+      "https://mirror.stream.centos.org/9-stream/BaseOS/${ARCH}/os/Packages/libutempter-1.2.1-6.el9.${ARCH}.rpm" 2>/dev/null || true
 
 RUN useradd -u 1001 -r -g 0 -m -s /sbin/nologin tinycode && \
     dnf remove -y shadow-utils && dnf clean all
