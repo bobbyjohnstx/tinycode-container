@@ -82,15 +82,16 @@ must stay in sync with these values.
 
 The container ENTRYPOINT is `entrypoint.sh` which:
 1. Sets `HOME=/home/tinycode` and `SHELL=/bin/sh` (OpenShift compatibility)
-2. Bridges `TINYCODE_VLLM_URL` → `TINYCODE_VLLM_HOST`
-3. Auto-detects Kubernetes environment (sets `TINYCODE_DISABLE_LSP_DOWNLOAD=1` in-cluster)
-4. Writes container defaults to `$XDG_CONFIG_HOME/tinycode/config.json` (lowest-priority config)
+2. Validates `TINYCODE_VLLM_MODEL` format (alphanumeric, `/`, `-`, `.` only; max 255 chars; no shell injection)
+3. Bridges `TINYCODE_VLLM_URL` → `TINYCODE_VLLM_HOST`
+4. Auto-detects Kubernetes environment (sets `TINYCODE_DISABLE_LSP_DOWNLOAD=1` in-cluster)
+5. Writes container defaults to `$XDG_CONFIG_HOME/tinycode/config.json` (lowest-priority config)
    - Includes `"model"` field if `TINYCODE_VLLM_MODEL` is set
-5. GitOps mode: clones `TINYCODE_GIT_REPO` into `/projects` (or pulls if already exists)
-6. Initializes git repo in `/projects` if not present
-7. Copies bundled agents/skills from `/opt/tinycode-defaults/` into PVC
-8. Downloads `oc` CLI if `TINYCODE_CLUSTER_ADMIN=true`
-9. Runs `tinycode web --hostname 0.0.0.0` (or attaches to `TINYCODE_SESSION_ID`)
+6. GitOps mode: clones `TINYCODE_GIT_REPO` into `/projects` (or pulls if already exists)
+7. Initializes git repo in `/projects` if not present
+8. Copies bundled agents/skills from `/opt/tinycode-defaults/` into PVC
+9. Downloads `oc` CLI if `TINYCODE_CLUSTER_ADMIN=true`
+10. Runs `tinycode web --hostname 0.0.0.0` (or attaches to `TINYCODE_SESSION_ID`)
 
 User config in `tinycode.jsonc` (PVC-persisted) is never overwritten by the entrypoint.
 
