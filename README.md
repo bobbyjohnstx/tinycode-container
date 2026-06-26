@@ -154,14 +154,7 @@ Load order (lowest to highest priority): `config.json` → `tinycode.json` → `
 
 **Environment Variables:**
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `TINYCODE_SERVER_PASSWORD` | *(none — unauthenticated)* | Server auth password |
-| `TINYCODE_OLLAMA_HOST` | `http://host.containers.internal:11434` | Ollama endpoint |
-| `TINYCODE_PORT` | `4096` | Override server port |
-| `TINYCODE_DISABLE_LSP_DOWNLOAD` | `1` | Skip LSP binary auto-download |
-| `TINYCODE_SESSION_ID` | *(none)* | Attach to existing session on start |
-| `OPENROUTER_API_KEY` | *(none)* | OpenRouter API key for cost tracking and balance display |
+For the complete environment variable reference, see [CONTAINER.md](CONTAINER.md).
 
 ## CI/CD
 
@@ -175,7 +168,11 @@ The GitHub Actions workflow (`.github/workflows/build-push.yaml`) automatically 
 
 ## Features
 
-**Swarm Tool:** The container includes `tmux` (compiled from source in the builder stage) to support the `/swarm` tool, which launches supervised multi-worker sessions with shared persistence. The swarm tool is particularly useful for distributed task solving via OpenRouter or other compatible providers.
+- **GitOps Mode:** Clone a git repository on container startup via `TINYCODE_GIT_REPO`, with optional auto-pull on restart
+- **vLLM Auto-Configuration:** Set `TINYCODE_VLLM_URL` to auto-configure vLLM endpoint and model
+- **RHOAI/OpenShift Auto-Detection:** Automatically detects Kubernetes environment and disables LSP downloads in air-gapped clusters
+- **Cluster-Admin Mode:** Enable `TINYCODE_CLUSTER_ADMIN=true` to download oc CLI and access cluster management capabilities
+- **Swarm Tool:** Includes `tmux` (compiled from source) to support the `/swarm` tool for supervised multi-worker sessions with shared persistence
 
 ## Known Limitations
 

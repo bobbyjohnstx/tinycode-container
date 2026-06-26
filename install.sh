@@ -85,7 +85,7 @@ if $RUNTIME container exists "$CONTAINER_NAME" 2>/dev/null; then
     # Start stopped container
     echo "Starting tinycode container..."
     $RUNTIME start "$CONTAINER_NAME"
-    echo "Tinycode is running at http://localhost:3000"
+    echo "Tinycode is running at http://localhost:4096"
     exit 0
   fi
 fi
@@ -94,12 +94,12 @@ fi
 echo "Starting tinycode container..."
 $RUNTIME run -d \
   --name "$CONTAINER_NAME" \
-  -p 3000:3000 \
+  -p 4096:4096 \
   -v tinycode-data:/home/tinycode/.local/share/tinycode \
   -v tinycode-config:/home/tinycode/.config/tinycode \
   "$IMAGE"
 
-echo "Tinycode is running at http://localhost:3000"
+echo "Tinycode is running at http://localhost:4096"
 WRAPPER_EOF
 
 chmod +x "$WRAPPER"
