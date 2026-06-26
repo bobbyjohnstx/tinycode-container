@@ -25,9 +25,10 @@ echo "==> Copying oh-my-tiny source (excluding node_modules, dist, .git)..."
 rsync -a --exclude=node_modules --exclude=dist --exclude=.git \
   "$OH_MY_TINY_SRC/" "$BUILD_DIR/oh-my-tiny-src/"
 
-echo "==> Copying ContainerFile.local and entrypoint.sh..."
+echo "==> Copying ContainerFile.local, entrypoint.sh, and config..."
 cp "$SCRIPT_DIR/ContainerFile.local" "$BUILD_DIR/ContainerFile.local"
 cp "$SCRIPT_DIR/entrypoint.sh" "$BUILD_DIR/entrypoint.sh"
+cp -r "$SCRIPT_DIR/config" "$BUILD_DIR/config"
 
 echo "==> Starting build (this takes 5-10 min on first run)..."
 echo ""
