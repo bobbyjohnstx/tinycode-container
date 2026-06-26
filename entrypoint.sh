@@ -18,6 +18,11 @@ export SHELL="/bin/sh"
 # Override via TINYCODE_OLLAMA_HOST env var for k8s or custom Ollama locations.
 export TINYCODE_OLLAMA_HOST="${TINYCODE_OLLAMA_HOST:-http://host.containers.internal:11434}"
 
+# Sanitize URLs in logs to hide credentials
+sanitize_url() {
+  echo "$1" | sed -E 's|://[^@]*@|://***@|g'
+}
+
 # Bridge TINYCODE_VLLM_URL to TINYCODE_VLLM_HOST (tinycode core's native env var)
 if [ -n "${TINYCODE_VLLM_URL:-}" ] && [ -z "${TINYCODE_VLLM_HOST:-}" ]; then
   export TINYCODE_VLLM_HOST="$TINYCODE_VLLM_URL"
@@ -43,12 +48,22 @@ fi
 
 DEFAULTS_FILE="$XDG_CONFIG_HOME/tinycode/config.json"
 if [ -n "${TINYCODE_VLLM_MODEL:-}" ]; then
-  cat > "$DEFAULTS_FILE" << EOF
+  # Validate model string: allow only safe characters
+  if echo "$TINYCODE_VLLM_MODEL" | grep -qE '^[a-zA-Z0-9/_:@. -]+$'; then
+    cat > "$DEFAULTS_FILE" << EOF
 {
   "plugin": ["/opt/oh-my-tiny"],
   "model": "$TINYCODE_VLLM_MODEL"
 }
 EOF
+  else
+    echo "[tinycode] WARNING: TINYCODE_VLLM_MODEL contains invalid characters, ignoring model override"
+    cat > "$DEFAULTS_FILE" << 'EOF'
+{
+  "plugin": ["/opt/oh-my-tiny"]
+}
+EOF
+  fi
 else
   cat > "$DEFAULTS_FILE" << 'EOF'
 {
@@ -82,7 +97,7 @@ if [ -n "${TINYCODE_GIT_REPO:-}" ]; then
     REMOTE_URL=$(cd "$CLONE_DIR" && git remote get-url origin 2>/dev/null || echo "")
     if [ -z "$REMOTE_URL" ]; then
       # Empty init repo — remove and clone fresh
-      echo "[tinycode] Removing empty init repo, cloning $TINYCODE_GIT_REPO..."
+      echo "[tinycode] Removing empty init repo, cloning $(sanitize_url "$TINYCODE_GIT_REPO")..."
       rm -rf "$CLONE_DIR/.git"
       timeout "$GIT_TIMEOUT" git clone --depth 1 \
         ${GIT_BRANCH:+--branch "$GIT_BRANCH"} \
@@ -95,7 +110,7 @@ if [ -n "${TINYCODE_GIT_REPO:-}" ]; then
       echo "[tinycode] Repo exists, pull on restart disabled. Skipping."
     fi
   else
-    echo "[tinycode] Cloning $TINYCODE_GIT_REPO (branch: ${GIT_BRANCH:-default})..."
+    echo "[tinycode] Cloning $(sanitize_url "$TINYCODE_GIT_REPO") (branch: ${GIT_BRANCH:-default})..."
     timeout "$GIT_TIMEOUT" git clone --depth 1 \
       ${GIT_BRANCH:+--branch "$GIT_BRANCH"} \
       "$TINYCODE_GIT_REPO" "$CLONE_DIR" || echo "[tinycode] WARNING: Git clone failed — starting with empty /projects"
@@ -148,21 +163,52 @@ if [ "${TINYCODE_CLUSTER_ADMIN}" = "true" ]; then
       *)       OC_ARCH="amd64" ;;
     esac
     OC_VERSION="${TINYCODE_OC_VERSION:-stable}"
-    case "$OC_ARCH" in
-      arm64) OC_URL="https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${OC_VERSION}/openshift-client-linux-arm64.tar.gz" ;;
-      *)     OC_URL="https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${OC_VERSION}/openshift-client-linux.tar.gz" ;;
+
+    # Validate version format
+    case "$OC_VERSION" in
+      stable|latest|fast|candidate) ;;
+      [0-9]*.[0-9]*.[0-9]*) ;;
+      *) echo "[tinycode] ERROR: Invalid OC_VERSION format: $OC_VERSION"; OC_VERSION="" ;;
     esac
-    mkdir -p /home/tinycode/.local/bin
-    set +e
-    OC_TMP=$(mktemp /tmp/oc-XXXXXX.tar.gz)
-    if curl -fsSL --max-time 120 "$OC_URL" -o "$OC_TMP" 2>/dev/null && \
-       tar xz -C /home/tinycode/.local/bin oc -f "$OC_TMP" 2>/dev/null; then
-      echo "[tinycode] oc CLI installed: $(/home/tinycode/.local/bin/oc version --client 2>/dev/null | head -1)"
-    else
-      echo "[tinycode] WARNING: Failed to download oc CLI. Cluster-admin agent will be available but oc commands will fail."
+
+    if [ -n "$OC_VERSION" ]; then
+      case "$OC_ARCH" in
+        arm64) OC_URL="https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${OC_VERSION}/openshift-client-linux-arm64.tar.gz" ;;
+        *)     OC_URL="https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${OC_VERSION}/openshift-client-linux.tar.gz" ;;
+      esac
+      mkdir -p /home/tinycode/.local/bin
+      set +e
+      OC_TMP=$(mktemp /tmp/oc-XXXXXX.tar.gz)
+      if curl -fsSL --max-time 120 "$OC_URL" -o "$OC_TMP" 2>/dev/null; then
+        # Verify checksum if available
+        if command -v sha256sum >/dev/null 2>&1; then
+          CHECKSUM_URL="${OC_URL%.tar.gz}.tar.gz.sha256"
+          OC_SHA_TMP=$(mktemp /tmp/oc-sha-XXXXXX)
+          if curl -fsSL --max-time 30 "$CHECKSUM_URL" -o "$OC_SHA_TMP" 2>/dev/null; then
+            EXPECTED_SHA=$(awk '{print $1}' "$OC_SHA_TMP")
+            ACTUAL_SHA=$(sha256sum "$OC_TMP" | awk '{print $1}')
+            if [ "$EXPECTED_SHA" != "$ACTUAL_SHA" ]; then
+              echo "[tinycode] ERROR: oc CLI checksum mismatch"
+              rm -f "$OC_TMP" "$OC_SHA_TMP"
+              OC_TMP=""
+            fi
+          else
+            echo "[tinycode] WARNING: Could not verify oc CLI checksum"
+          fi
+          rm -f "$OC_SHA_TMP"
+        fi
+
+        if [ -n "$OC_TMP" ] && [ -f "$OC_TMP" ] && tar xz -C /home/tinycode/.local/bin oc -f "$OC_TMP" 2>/dev/null; then
+          echo "[tinycode] oc CLI installed: $(/home/tinycode/.local/bin/oc version --client 2>/dev/null | head -1)"
+        else
+          echo "[tinycode] WARNING: Failed to extract oc CLI. Cluster-admin agent will be available but oc commands will fail."
+        fi
+      else
+        echo "[tinycode] WARNING: Failed to download oc CLI. Cluster-admin agent will be available but oc commands will fail."
+      fi
+      rm -f "$OC_TMP"
+      set -e
     fi
-    rm -f "$OC_TMP"
-    set -e
   fi
 
   # Auto-detect cluster type: OpenShift or vanilla Kubernetes
