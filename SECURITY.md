@@ -26,6 +26,7 @@ If you discover a security vulnerability, please report it responsibly:
 
 ## Security Best Practices
 
-- Set `TINYCODE_SERVER_PASSWORD` when exposing the server on a network
+- Set `TINYCODE_SERVER_PASSWORD` when exposing the container on a network
 - Never commit API keys or secrets to the repository
-- Review MCP server configurations — they execute with your user permissions
+- Use read-only root filesystem where possible for additional security
+- Review volume mount permissions in multi-tenant environments
