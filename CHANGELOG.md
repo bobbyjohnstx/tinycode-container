@@ -1,5 +1,20 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+- arm64 tmux RPM architecture detection
+- Added git-core to CI runtime image (GitOps mode)
+- readOnlyRootFilesystem emptyDir mounts for writable paths
+- Added /projects PVC mount to k8s deployment
+- build-local.sh port corrected to 4096
+- Documentation drift (UBI9 not UBI9-minimal, RPM not compiled from source)
+
+### Added
+- .dockerignore for build context optimization
+- Pinnable git clone refs (TINYCODE_REF, OMT_REF build args)
+- bats test suite for entrypoint validation
+
 ## [0.1.0] — 2026-06-26
 
 Initial public release.
