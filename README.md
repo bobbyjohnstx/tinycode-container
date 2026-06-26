@@ -11,7 +11,7 @@ The container interface (port, UID, health endpoints, volume mounts, environment
 ## Quick Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/bjohns/tinycode-container/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/bobbyjohnstx/tinycode-container/main/install.sh | sh
 ```
 
 This installs a `tinycode` wrapper script that:
