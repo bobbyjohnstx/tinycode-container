@@ -60,8 +60,13 @@ must stay in sync with these values.
 | `TINYCODE_GIT_BRANCH` | *(default branch)* | Branch to clone |
 | `TINYCODE_GIT_PULL_ON_RESTART` | `false` | Pull latest on restart if repo exists |
 | `TINYCODE_GIT_CLONE_TIMEOUT` | `300` | Clone timeout in seconds |
+| **Cluster Management** | | |
+| `TINYCODE_CLUSTER_ADMIN` | `false` | Enable cluster-admin agent (downloads oc CLI and mounts kubeconfig) |
+| `TINYCODE_OC_VERSION` | `stable` | oc CLI version to download (e.g., `4.17` for reproducibility) |
 | **In-Cluster Auto-Detection** | | |
 | `TINYCODE_AUTO_DETECT` | `true` | Auto-detect Kubernetes environment (disables LSP downloads) |
+| **Workspace Configuration** | | |
+| `TINYCODE_WORKDIR` | `/projects` | Working directory for projects (fallback: `/home/tinycode`) |
 
 ## Included Tools
 
