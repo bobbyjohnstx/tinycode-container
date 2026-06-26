@@ -1,5 +1,7 @@
 # tinycode-container
 
+[![CI](https://github.com/bobbyjohnstx/tinycode-container/actions/workflows/build-push.yaml/badge.svg)](https://github.com/bobbyjohnstx/tinycode-container/actions/workflows/build-push.yaml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/bobbyjohnstx/tinycode-container)](https://github.com/bobbyjohnstx/tinycode-container/releases)
+
 Single container image running **tinycode** (web mode) + **oh-my-tiny** (native plugin) for deployment to OpenShift and Kubernetes.
 
 ## What is this?
@@ -172,7 +174,7 @@ The GitHub Actions workflow (`.github/workflows/build-push.yaml`) automatically 
 - **vLLM Auto-Configuration:** Set `TINYCODE_VLLM_URL` to auto-configure vLLM endpoint and model
 - **RHOAI/OpenShift Auto-Detection:** Automatically detects Kubernetes environment and disables LSP downloads in air-gapped clusters
 - **Cluster-Admin Mode:** Enable `TINYCODE_CLUSTER_ADMIN=true` to download oc CLI and access cluster management capabilities
-- **Swarm Tool:** Includes `tmux` (compiled from source) to support the `/swarm` tool for supervised multi-worker sessions with shared persistence
+- **Swarm Tool:** Includes `tmux` (installed from CentOS Stream 9 RPM) to support the `/swarm` tool for supervised multi-worker sessions with shared persistence
 - **Input Validation:** `TINYCODE_VLLM_MODEL` is validated to prevent shell injection (alphanumeric, `/`, `-`, `.` only)
 - **Read-Only Root:** Container filesystem can be mounted read-only for additional security in restricted environments
 - **Security Headers:** Server includes standard security headers (CSP, X-Frame-Options, X-Content-Type-Options, etc.)
@@ -192,4 +194,4 @@ The GitHub Actions workflow (`.github/workflows/build-push.yaml`) automatically 
 
 ## License
 
-Inherits licenses from tinycode and oh-my-tiny upstream projects.
+MIT — see [LICENSE](LICENSE).
