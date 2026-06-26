@@ -1,8 +1,10 @@
 name: Build and Push Container Image
 
 on:
-  push:
-    branches: [main]
+  # Disabled until GH_PAT, QUAY_USERNAME, and QUAY_PASSWORD secrets are configured.
+  # Uncomment the push trigger below to re-enable.
+  # push:
+  #   branches: [main]
   workflow_dispatch:
 
 env:
