@@ -8,6 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 TINYCODE_SRC="${TINYCODE_SRC:-/Users/bjohns/projects/tinycode}"
 OH_MY_TINY_SRC="${OH_MY_TINY_SRC:-/Users/bjohns/projects/oh-my-tiny}"
 IMAGE_TAG="${IMAGE_TAG:-tinycode-container:local}"
+BUILD_PLATFORM="${BUILD_PLATFORM:-}"
 
 BUILD_DIR="$(mktemp -d /tmp/tinycode-container-build.XXXXXX)"
 trap 'rm -rf "$BUILD_DIR"' EXIT
@@ -33,6 +34,7 @@ cp -r "$SCRIPT_DIR/config" "$BUILD_DIR/config"
 echo "==> Starting build (this takes 5-10 min on first run)..."
 echo ""
 podman build \
+  ${BUILD_PLATFORM:+--platform "$BUILD_PLATFORM"} \
   -f "$BUILD_DIR/ContainerFile.local" \
   -t "$IMAGE_TAG" \
   "$BUILD_DIR"
