@@ -173,6 +173,10 @@ The GitHub Actions workflow (`.github/workflows/build-push.yaml`) automatically 
 - **RHOAI/OpenShift Auto-Detection:** Automatically detects Kubernetes environment and disables LSP downloads in air-gapped clusters
 - **Cluster-Admin Mode:** Enable `TINYCODE_CLUSTER_ADMIN=true` to download oc CLI and access cluster management capabilities
 - **Swarm Tool:** Includes `tmux` (compiled from source) to support the `/swarm` tool for supervised multi-worker sessions with shared persistence
+- **Input Validation:** `TINYCODE_VLLM_MODEL` is validated to prevent shell injection (alphanumeric, `/`, `-`, `.` only)
+- **Read-Only Root:** Container filesystem can be mounted read-only for additional security in restricted environments
+- **Security Headers:** Server includes standard security headers (CSP, X-Frame-Options, X-Content-Type-Options, etc.)
+- **Rate Limiting:** Ingress can be configured with rate limiting policies for OpenShift deployments
 
 ## Known Limitations
 
