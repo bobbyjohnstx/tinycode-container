@@ -82,7 +82,7 @@ Set the `TINYCODE_SESSION_ID` environment variable to attach to an existing sess
 ```bash
 podman run -d -p 4096:4096 \
   -e TINYCODE_SESSION_ID=my-session \
-  ghcr.io/bjohns/tinycode-container:latest
+  quay.io/bjohns/tinycode-container:latest
 ```
 
 ## Deploy to OpenShift
