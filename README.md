@@ -26,7 +26,7 @@ To uninstall: `tinycode --uninstall`
 
 - **podman** or **docker** (for running and local builds)
 - **kubectl** or **oc** (for Kubernetes/OpenShift deployment)
-- **GitHub token** with repo read access to private repositories (bjohns/tinycode and bjohns/oh-my-tiny)
+- **GitHub token** with repo read access (only needed for building — oh-my-tiny is currently a private dependency)
 
 ## Multi-Architecture Support
 
