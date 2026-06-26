@@ -11,7 +11,7 @@ must stay in sync with these values.
 | Registry | `quay.io/bjohns/tinycode-container` |
 | Tags | `:latest`, `:<git-sha>` |
 | Architectures | `linux/amd64`, `linux/arm64` |
-| Base | Red Hat UBI9-minimal |
+| Base | Red Hat UBI9 |
 
 ## Runtime Identity
 
@@ -76,7 +76,7 @@ must stay in sync with these values.
 
 ## Included Tools
 
-**tmux** (v3.4) is compiled from source and included in the runtime image to support the `/swarm` skill — a supervised multi-worker orchestration tool that creates split-screen sessions for distributed task solving.
+**tmux** (v3.2a) is installed from CentOS Stream 9 RPM and included in the runtime image to support the `/swarm` skill — a supervised multi-worker orchestration tool that creates split-screen sessions for distributed task solving.
 
 ## Startup Behaviour
 

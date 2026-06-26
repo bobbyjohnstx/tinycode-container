@@ -82,11 +82,36 @@ spec:
         - name: tinycode-data
           mountPath: /home/tinycode/.config/tinycode
           subPath: config
+        - name: projects
+          mountPath: /projects
+        - name: local-bin
+          mountPath: /home/tinycode/.local/bin
+        - name: local-state
+          mountPath: /home/tinycode/.local/state
+        - name: cache
+          mountPath: /home/tinycode/.cache
+        - name: tinycode-project-config
+          mountPath: /home/tinycode/.tinycode
+        - name: gitconfig
+          mountPath: /home/tinycode/.gitconfig
         - name: tmp
           mountPath: /tmp
       volumes:
       - name: tinycode-data
         persistentVolumeClaim:
           claimName: tinycode-data
+      - name: projects
+        persistentVolumeClaim:
+          claimName: tinycode-projects
+      - name: local-bin
+        emptyDir: {}
+      - name: local-state
+        emptyDir: {}
+      - name: cache
+        emptyDir: {}
+      - name: tinycode-project-config
+        emptyDir: {}
+      - name: gitconfig
+        emptyDir: {}
       - name: tmp
         emptyDir: {}

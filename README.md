@@ -55,7 +55,7 @@ podman build -f ContainerFile \
 The multi-stage build:
 1. **Stage 1** (builder): Clones tinycode, installs Bun, builds self-contained binary
 2. **Stage 2** (plugin-builder): Clones oh-my-tiny, installs Node.js 20, compiles plugin
-3. **Stage 3** (runtime): UBI9-minimal base with non-root user (UID 1001, GID 0)
+3. **Stage 3** (runtime): UBI9 base with non-root user (UID 1001, GID 0)
 
 ## Run Locally (Quick Test)
 
@@ -130,7 +130,7 @@ The tinycode web UI requires authentication. To set the password:
 
 ## Architecture
 
-**Base Image:** Red Hat UBI9-minimal (OpenShift-compatible)
+**Base Image:** Red Hat UBI9 (OpenShift-compatible)
 **Port:** 4096 (HTTP)
 **User:** UID 1001 (non-root), GID 0 (OpenShift arbitrary UID support via `g=u`)
 **Health Probes:** `GET /global/health` (unauthenticated, liveness + readiness)
