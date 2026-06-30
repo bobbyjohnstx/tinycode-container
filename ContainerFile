@@ -5,7 +5,7 @@
 
 ARG TARGETARCH
 ARG TINYCODE_REF=main
-ARG OMT_REF=main
+ARG OMT_REF=master
 
 # Stage 1: Build tinycode binary
 FROM registry.access.redhat.com/ubi9/ubi AS builder
