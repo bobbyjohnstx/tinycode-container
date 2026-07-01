@@ -18,7 +18,7 @@ jobs:
       - name: Install bats
         run: |
           git clone https://github.com/bats-core/bats-core.git /tmp/bats
-          /tmp/bats/install.sh /usr/local
+          sudo /tmp/bats/install.sh /usr/local
 
       - name: Run tests
         run: bats test/
