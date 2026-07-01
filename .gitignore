@@ -4,3 +4,5 @@ k8s/secrets/secret.yaml
 .omc/
 node_modules/
 dist/
+session-ses_*.md
+.pytest_cache/
