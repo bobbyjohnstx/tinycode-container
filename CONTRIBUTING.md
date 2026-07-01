@@ -16,7 +16,7 @@
 ./install.sh
 
 # Test entrypoint locally
-podman run --rm -it -e TINYCODE_COMMAND="version" localhost/tinycode:latest
+podman run --rm quay.io/bjohns/tinycode-container:latest tinycode --version
 ```
 
 ## Pull Request Process

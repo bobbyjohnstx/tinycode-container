@@ -49,7 +49,8 @@ fi
 DEFAULTS_FILE="$XDG_CONFIG_HOME/tinycode/config.json"
 if [ -n "${TINYCODE_VLLM_MODEL:-}" ]; then
   # Validate model string: allow only safe characters
-  if echo "$TINYCODE_VLLM_MODEL" | grep -qE '^[a-zA-Z0-9/_:@. -]+$'; then
+  if printf '%s' "$TINYCODE_VLLM_MODEL" | grep -qE '^[a-zA-Z0-9/_:@. -]+$' && \
+     [ "${#TINYCODE_VLLM_MODEL}" -le 255 ]; then
     cat > "$DEFAULTS_FILE" << EOF
 {
   "plugin": ["/opt/oh-my-tiny"],

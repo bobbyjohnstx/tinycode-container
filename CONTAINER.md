@@ -82,7 +82,7 @@ must stay in sync with these values.
 
 The container ENTRYPOINT is `entrypoint.sh` which:
 1. Sets `HOME=/home/tinycode` and `SHELL=/bin/sh` (OpenShift compatibility)
-2. Validates `TINYCODE_VLLM_MODEL` format (alphanumeric, `/`, `-`, `.` only; max 255 chars; no shell injection)
+2. Validates `TINYCODE_VLLM_MODEL` format (alphanumeric, `/`, `_`, `-`, `.`, `:`, `@`, space; max 255 chars; no shell injection)
 3. Bridges `TINYCODE_VLLM_URL` → `TINYCODE_VLLM_HOST`
 4. Auto-detects Kubernetes environment (sets `TINYCODE_DISABLE_LSP_DOWNLOAD=1` in-cluster)
 5. Writes container defaults to `$XDG_CONFIG_HOME/tinycode/config.json` (lowest-priority config)

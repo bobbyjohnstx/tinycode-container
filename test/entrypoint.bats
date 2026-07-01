@@ -144,15 +144,15 @@ EOF
 # --- Entrypoint Syntax ---
 
 @test "entrypoint.sh has valid shell syntax" {
-  bash -n /private/tmp/tinycode-container/entrypoint.sh
+  bash -n "$BATS_TEST_DIRNAME/../entrypoint.sh"
 }
 
 # --- install.sh Port ---
 
 @test "install.sh uses port 4096" {
-  ! grep -q "3000" /private/tmp/tinycode-container/install.sh
+  ! grep -q "3000" "$BATS_TEST_DIRNAME/../install.sh"
 }
 
 @test "install.sh references port 4096" {
-  grep -q "4096" /private/tmp/tinycode-container/install.sh
+  grep -q "4096" "$BATS_TEST_DIRNAME/../install.sh"
 }
