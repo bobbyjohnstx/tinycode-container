@@ -10,6 +10,8 @@ This project packages tinycode and the oh-my-tiny plugin as a self-contained con
 
 The container interface (port, UID, health endpoints, volume mounts, environment variables) is documented in [CONTAINER.md](CONTAINER.md), which is the authoritative contract between this image and the tinycode-operator that deploys it.
 
+> **Note:** A bare container can only chat with the model — it has no project files to work on. To make tinycode useful on a cluster, give it context: clone a git repo (`TINYCODE_GIT_REPO`), enable cluster-admin mode (`TINYCODE_CLUSTER_ADMIN=true`), or mount a host path with existing code. See [Environment Variables](CONTAINER.md) for the full list.
+
 ## Quick Install
 
 ```bash
