@@ -6,6 +6,16 @@ on:
   # push:
   #   branches: [main]
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g. v1.17.0). Leave empty to tag only with SHA + latest.'
+        required: false
+        type: string
+      tinycode_ref:
+        description: 'tinycode git ref to build (branch, tag, or SHA). Default: main'
+        required: false
+        default: 'main'
+        type: string
 
 env:
   REGISTRY: ghcr.io
@@ -48,11 +58,15 @@ jobs:
         file: ContainerFile
         platforms: linux/amd64,linux/arm64
         push: true
+        build-args: |
+          TINYCODE_REF=${{ inputs.tinycode_ref || 'main' }}
         tags: |
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           quay.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
           quay.io/${{ env.IMAGE_NAME }}:latest
+          ${{ inputs.version && format('{0}/{1}:{2}', env.REGISTRY, env.IMAGE_NAME, inputs.version) || '' }}
+          ${{ inputs.version && format('quay.io/{0}:{1}', env.IMAGE_NAME, inputs.version) || '' }}
         secrets: |
           # Classic PAT with repo scope — needed for private repo clones. Revert to GITHUB_TOKEN when repos go public.
           github_token=${{ secrets.GH_PAT }}
