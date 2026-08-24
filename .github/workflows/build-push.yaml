@@ -1,10 +1,6 @@
 name: Build and Push Container Image
 
 on:
-  # Disabled until GH_PAT, QUAY_USERNAME, and QUAY_PASSWORD secrets are configured.
-  # Uncomment the push trigger below to re-enable.
-  # push:
-  #   branches: [main]
   workflow_dispatch:
     inputs:
       version:
@@ -45,11 +41,33 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Login to Quay.io
+      if: ${{ secrets.QUAY_USERNAME != '' && secrets.QUAY_PASSWORD != '' }}
       uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4
       with:
         registry: quay.io
         username: ${{ secrets.QUAY_USERNAME }}
         password: ${{ secrets.QUAY_PASSWORD }}
+
+    - name: Compute image tags
+      id: tags
+      run: |
+        TAGS="${REGISTRY}/${IMAGE_NAME}:${GITHUB_SHA}"
+        TAGS="${TAGS},${REGISTRY}/${IMAGE_NAME}:latest"
+
+        if [ -n "${{ inputs.version }}" ]; then
+          TAGS="${TAGS},${REGISTRY}/${IMAGE_NAME}:${{ inputs.version }}"
+        fi
+
+        # Add Quay.io tags only when credentials are available
+        if [ -n "${{ secrets.QUAY_USERNAME }}" ]; then
+          TAGS="${TAGS},quay.io/${IMAGE_NAME}:${GITHUB_SHA}"
+          TAGS="${TAGS},quay.io/${IMAGE_NAME}:latest"
+          if [ -n "${{ inputs.version }}" ]; then
+            TAGS="${TAGS},quay.io/${IMAGE_NAME}:${{ inputs.version }}"
+          fi
+        fi
+
+        echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
 
     - name: Build and push multi-arch image
       uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
@@ -60,16 +78,9 @@ jobs:
         push: true
         build-args: |
           TINYCODE_REF=${{ inputs.tinycode_ref || 'main' }}
-        tags: |
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          quay.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          quay.io/${{ env.IMAGE_NAME }}:latest
-          ${{ inputs.version && format('{0}/{1}:{2}', env.REGISTRY, env.IMAGE_NAME, inputs.version) || '' }}
-          ${{ inputs.version && format('quay.io/{0}:{1}', env.IMAGE_NAME, inputs.version) || '' }}
+        tags: ${{ steps.tags.outputs.tags }}
         secrets: |
-          # Classic PAT with repo scope — needed for private repo clones. Revert to GITHUB_TOKEN when repos go public.
-          github_token=${{ secrets.GH_PAT }}
+          github_token=${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
 
     - name: Smoke test (amd64)
       run: |
