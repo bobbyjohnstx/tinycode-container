@@ -40,8 +40,21 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Check Quay.io credentials
+      id: quay
+      run: |
+        if [ -n "$QUAY_USER" ] && [ -n "$QUAY_PASS" ]; then
+          echo "available=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "available=false" >> "$GITHUB_OUTPUT"
+          echo "::notice::Quay.io credentials not configured — skipping Quay push"
+        fi
+      env:
+        QUAY_USER: ${{ secrets.QUAY_USERNAME }}
+        QUAY_PASS: ${{ secrets.QUAY_PASSWORD }}
+
     - name: Login to Quay.io
-      if: ${{ secrets.QUAY_USERNAME != '' && secrets.QUAY_PASSWORD != '' }}
+      if: steps.quay.outputs.available == 'true'
       uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4
       with:
         registry: quay.io
@@ -54,20 +67,22 @@ jobs:
         TAGS="${REGISTRY}/${IMAGE_NAME}:${GITHUB_SHA}"
         TAGS="${TAGS},${REGISTRY}/${IMAGE_NAME}:latest"
 
-        if [ -n "${{ inputs.version }}" ]; then
-          TAGS="${TAGS},${REGISTRY}/${IMAGE_NAME}:${{ inputs.version }}"
+        if [ -n "$VERSION" ]; then
+          TAGS="${TAGS},${REGISTRY}/${IMAGE_NAME}:${VERSION}"
         fi
 
-        # Add Quay.io tags only when credentials are available
-        if [ -n "${{ secrets.QUAY_USERNAME }}" ]; then
+        if [ "$QUAY_AVAILABLE" = "true" ]; then
           TAGS="${TAGS},quay.io/${IMAGE_NAME}:${GITHUB_SHA}"
           TAGS="${TAGS},quay.io/${IMAGE_NAME}:latest"
-          if [ -n "${{ inputs.version }}" ]; then
-            TAGS="${TAGS},quay.io/${IMAGE_NAME}:${{ inputs.version }}"
+          if [ -n "$VERSION" ]; then
+            TAGS="${TAGS},quay.io/${IMAGE_NAME}:${VERSION}"
           fi
         fi
 
         echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
+      env:
+        VERSION: ${{ inputs.version }}
+        QUAY_AVAILABLE: ${{ steps.quay.outputs.available }}
 
     - name: Build and push multi-arch image
       uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
