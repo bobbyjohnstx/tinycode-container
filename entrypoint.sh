@@ -46,6 +46,16 @@ if [ -n "${KUBERNETES_SERVICE_HOST:-}" ] && [ "${TINYCODE_AUTO_DETECT:-true}" !=
   fi
 fi
 
+# Build plugin list: oh-my-tiny + any bundled plugins from /opt/tinycode-plugins/
+PLUGIN_LIST='"/opt/oh-my-tiny"'
+if [ -d "/opt/tinycode-plugins/node_modules" ]; then
+  for plugin_dir in /opt/tinycode-plugins/node_modules/tinycode-plugin-*/; do
+    [ -d "$plugin_dir" ] || continue
+    PLUGIN_LIST="$PLUGIN_LIST, \"$plugin_dir\""
+    echo "[tinycode] Bundled plugin: $(basename "$plugin_dir")"
+  done
+fi
+
 DEFAULTS_FILE="$XDG_CONFIG_HOME/tinycode/config.json"
 if [ -n "${TINYCODE_VLLM_MODEL:-}" ]; then
   # Validate model string: allow only safe characters
@@ -53,22 +63,22 @@ if [ -n "${TINYCODE_VLLM_MODEL:-}" ]; then
      [ "${#TINYCODE_VLLM_MODEL}" -le 255 ]; then
     cat > "$DEFAULTS_FILE" << EOF
 {
-  "plugin": ["/opt/oh-my-tiny"],
+  "plugin": [$PLUGIN_LIST],
   "model": "$TINYCODE_VLLM_MODEL"
 }
 EOF
   else
     echo "[tinycode] WARNING: TINYCODE_VLLM_MODEL contains invalid characters, ignoring model override"
-    cat > "$DEFAULTS_FILE" << 'EOF'
+    cat > "$DEFAULTS_FILE" << EOF
 {
-  "plugin": ["/opt/oh-my-tiny"]
+  "plugin": [$PLUGIN_LIST]
 }
 EOF
   fi
 else
-  cat > "$DEFAULTS_FILE" << 'EOF'
+  cat > "$DEFAULTS_FILE" << EOF
 {
-  "plugin": ["/opt/oh-my-tiny"]
+  "plugin": [$PLUGIN_LIST]
 }
 EOF
 fi

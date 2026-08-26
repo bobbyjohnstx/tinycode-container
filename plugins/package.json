@@ -1,0 +1,6 @@
+{
+  "name": "tinycode-container-plugins",
+  "private": true,
+  "description": "Bundled tinycode plugins for the container image",
+  "dependencies": {}
+}
