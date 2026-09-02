@@ -94,8 +94,6 @@ jobs:
         build-args: |
           TINYCODE_REF=${{ inputs.tinycode_ref || 'main' }}
         tags: ${{ steps.tags.outputs.tags }}
-        secrets: |
-          github_token=${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
 
     - name: Smoke test (amd64)
       run: |
