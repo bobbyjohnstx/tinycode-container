@@ -1,11 +1,10 @@
 # syntax=docker/dockerfile:1
-# tinycode-container: tinycode (web mode) + oh-my-tiny (native plugin)
-# Build: podman build -f ContainerFile --platform linux/amd64 --secret id=github_token,src=$HOME/.github-token -t ghcr.io/bjohns/tinycode-container:latest .
+# tinycode-container: tinycode (web mode) with oh-my-tiny built-in
+# Build: podman build -f ContainerFile --platform linux/amd64 -t ghcr.io/bjohns/tinycode-container:latest .
 # Multi-arch: podman build -f ContainerFile --platform linux/amd64,linux/arm64 ...
 
 ARG TARGETARCH
 ARG TINYCODE_REF=main
-ARG OMT_REF=master
 
 # Stage 1: Build tinycode binary
 FROM registry.access.redhat.com/ubi9/ubi AS builder
@@ -18,9 +17,8 @@ RUN dnf install -y git unzip make gcc gcc-c++ && dnf clean all
 RUN curl -fsSL https://bun.sh/install | bash
 ENV PATH="/root/.bun/bin:$PATH"
 
-# Clone tinycode from GitHub (secret used for oh-my-tiny, not baked into layer)
-RUN --mount=type=secret,id=github_token \
-    git clone https://$(cat /run/secrets/github_token)@github.com/bobbyjohnstx/tinycode.git /build/tinycode
+# Clone tinycode from GitHub (public repo)
+RUN git clone https://github.com/bobbyjohnstx/tinycode.git /build/tinycode
 
 WORKDIR /build/tinycode
 ARG TINYCODE_REF
@@ -29,30 +27,6 @@ RUN bun install --frozen-lockfile
 # Build single self-contained binary (script/build.ts:263 — Bun compile)
 RUN bun run --cwd packages/tinycode build --single
 
-# Stage 2: Build oh-my-tiny plugin
-FROM registry.access.redhat.com/ubi9/ubi AS plugin-builder
-
-ARG TARGETARCH
-
-RUN dnf install -y git && dnf clean all
-
-# Install Node.js 20 (oh-my-tiny requires node>=20 per package.json:38)
-RUN curl -fsSL https://rpm.nodesource.com/setup_20.x | bash - && \
-    dnf install -y nodejs && dnf clean all
-
-# Clone oh-my-tiny from GitHub (private dependency — secret not baked into layer)
-RUN --mount=type=secret,id=github_token \
-    git clone https://$(cat /run/secrets/github_token)@github.com/bobbyjohnstx/oh-my-tiny.git /build/oh-my-tiny
-
-WORKDIR /build/oh-my-tiny
-ARG OMT_REF
-RUN git checkout $OMT_REF
-# npm ci installs platform-specific @ast-grep/napi native bindings
-RUN npm ci
-# tsc compiles src/ → dist/ (package.json:8)
-RUN npm run build
-
-# Stage 3: Runtime — full UBI9 (tmux is in ubi-baseos, no extra repos needed)
 FROM registry.access.redhat.com/ubi9/ubi AS runtime
 
 ARG TARGETARCH
@@ -71,11 +45,6 @@ RUN useradd -u 1001 -r -g 0 -m -s /sbin/nologin tinycode && \
 
 # Copy tinycode self-contained binary
 COPY --from=builder /build/tinycode/packages/tinycode/dist/tinycode-linux-*/bin/tinycode /usr/local/bin/tinycode
-
-# Copy oh-my-tiny plugin dist and node_modules (needed for @ast-grep/napi native bindings)
-COPY --from=plugin-builder /build/oh-my-tiny/dist /opt/oh-my-tiny/dist
-COPY --from=plugin-builder /build/oh-my-tiny/package.json /opt/oh-my-tiny/package.json
-COPY --from=plugin-builder /build/oh-my-tiny/node_modules /opt/oh-my-tiny/node_modules
 
 # Copy bundled plugins (npm packages pre-installed in plugins/)
 COPY plugins/ /opt/tinycode-plugins/

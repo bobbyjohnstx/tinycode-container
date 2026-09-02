@@ -46,12 +46,13 @@ if [ -n "${KUBERNETES_SERVICE_HOST:-}" ] && [ "${TINYCODE_AUTO_DETECT:-true}" !=
   fi
 fi
 
-# Build plugin list: oh-my-tiny + any bundled plugins from /opt/tinycode-plugins/
-PLUGIN_LIST='"/opt/oh-my-tiny"'
+# Build plugin list from bundled plugins in /opt/tinycode-plugins/
+PLUGIN_LIST=""
 if [ -d "/opt/tinycode-plugins/node_modules" ]; then
   for plugin_dir in /opt/tinycode-plugins/node_modules/tinycode-plugin-*/; do
     [ -d "$plugin_dir" ] || continue
-    PLUGIN_LIST="$PLUGIN_LIST, \"$plugin_dir\""
+    [ -n "$PLUGIN_LIST" ] && PLUGIN_LIST="$PLUGIN_LIST, "
+    PLUGIN_LIST="$PLUGIN_LIST\"$plugin_dir\""
     echo "[tinycode] Bundled plugin: $(basename "$plugin_dir")"
   done
 fi
