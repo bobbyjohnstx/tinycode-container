@@ -1,12 +1,11 @@
 #!/bin/sh
-# Build tinycode-container locally using source from sibling directories.
-# Copies source (excluding node_modules/.git) into a temp build context,
+# Build tinycode-container locally using source from sibling tinycode directory.
+# Copies Go source (excluding vendor/.git) into a temp build context,
 # then runs podman build from there.
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 TINYCODE_SRC="${TINYCODE_SRC:-/Users/bjohns/projects/tinycode}"
-OH_MY_TINY_SRC="${OH_MY_TINY_SRC:-/Users/bjohns/projects/oh-my-tiny}"
 IMAGE_TAG="${IMAGE_TAG:-tinycode-container:local}"
 BUILD_PLATFORM="${BUILD_PLATFORM:-}"
 
@@ -15,23 +14,21 @@ trap 'rm -rf "$BUILD_DIR"' EXIT
 
 echo "==> Build context: $BUILD_DIR"
 echo "==> tinycode source: $TINYCODE_SRC"
-echo "==> oh-my-tiny source: $OH_MY_TINY_SRC"
 echo ""
 
-echo "==> Copying tinycode source (excluding node_modules, dist, .git)..."
-rsync -a --exclude=node_modules --exclude=dist --exclude=.git \
+echo "==> Copying tinycode source (excluding vendor, dist, .git, node_modules, packages)..."
+rsync -a \
+  --exclude=vendor --exclude=dist --exclude=.git \
+  --exclude=node_modules --exclude=packages \
   "$TINYCODE_SRC/" "$BUILD_DIR/tinycode-src/"
 
-echo "==> Copying oh-my-tiny source (excluding node_modules, dist, .git)..."
-rsync -a --exclude=node_modules --exclude=dist --exclude=.git \
-  "$OH_MY_TINY_SRC/" "$BUILD_DIR/oh-my-tiny-src/"
-
-echo "==> Copying ContainerFile.local, entrypoint.sh, and config..."
+echo "==> Copying ContainerFile.local, entrypoint.sh, config, and plugins..."
 cp "$SCRIPT_DIR/ContainerFile.local" "$BUILD_DIR/ContainerFile.local"
 cp "$SCRIPT_DIR/entrypoint.sh" "$BUILD_DIR/entrypoint.sh"
 cp -r "$SCRIPT_DIR/config" "$BUILD_DIR/config"
+cp -r "$SCRIPT_DIR/plugins" "$BUILD_DIR/plugins"
 
-echo "==> Starting build (this takes 5-10 min on first run)..."
+echo "==> Starting build (this takes 3-5 min on first run)..."
 echo ""
 podman build \
   ${BUILD_PLATFORM:+--platform "$BUILD_PLATFORM"} \
