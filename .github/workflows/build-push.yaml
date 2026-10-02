@@ -16,6 +16,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: bobbyjohnstx/tinycode-container
+  QUAY_IMAGE_NAME: bjohns/tinycode-container
 
 jobs:
   build-push:
@@ -72,10 +73,10 @@ jobs:
         fi
 
         if [ "$QUAY_AVAILABLE" = "true" ]; then
-          TAGS="${TAGS},quay.io/${IMAGE_NAME}:${GITHUB_SHA}"
-          TAGS="${TAGS},quay.io/${IMAGE_NAME}:latest"
+          TAGS="${TAGS},quay.io/${QUAY_IMAGE_NAME}:${GITHUB_SHA}"
+          TAGS="${TAGS},quay.io/${QUAY_IMAGE_NAME}:latest"
           if [ -n "$VERSION" ]; then
-            TAGS="${TAGS},quay.io/${IMAGE_NAME}:${VERSION}"
+            TAGS="${TAGS},quay.io/${QUAY_IMAGE_NAME}:${VERSION}"
           fi
         fi
 
