@@ -99,9 +99,9 @@ jobs:
     - name: Smoke test (amd64)
       run: |
         docker run --rm --platform linux/amd64 --entrypoint tinycode \
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} --version
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} version
 
     - name: Smoke test (arm64)
       run: |
         docker run --rm --platform linux/arm64 --entrypoint tinycode \
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} --version
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} version
