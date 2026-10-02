@@ -1,71 +1,48 @@
-# Local development build — uses source dirs copied into build context by build-local.sh.
+# Local development build — uses source dir copied into build context by build-local.sh.
 # DO NOT run podman build directly; use: ./build-local.sh
 
 ARG TARGETARCH
 
-# Stage 1: Build tinycode binary
+# Stage 1: Build tinycode binary from Go source
 FROM registry.access.redhat.com/ubi9/ubi AS builder
 
 ARG TARGETARCH
 
-RUN dnf install -y git unzip make gcc gcc-c++ && dnf clean all
+RUN dnf install -y git make && dnf clean all
 
-RUN curl -fsSL https://bun.sh/install | bash
-ENV PATH="/root/.bun/bin:$PATH"
+# Install Go
+ARG GO_VERSION=1.27.1
+RUN ARCH=$(uname -m) && \
+    case "$ARCH" in x86_64) GO_ARCH=amd64 ;; aarch64) GO_ARCH=arm64 ;; *) GO_ARCH=amd64 ;; esac && \
+    curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-${GO_ARCH}.tar.gz" | tar -C /usr/local -xz
+ENV PATH="/usr/local/go/bin:$PATH"
 
-# Source copied into build context by build-local.sh (excludes node_modules/.git)
+# Source copied into build context by build-local.sh
 COPY tinycode-src/ /build/tinycode/
 
 WORKDIR /build/tinycode
-RUN bun install
-# TINYCODE_CHANNEL bypasses the `git branch --show-current` call in build.ts:30
-ENV TINYCODE_CHANNEL=container
-RUN bun run --cwd packages/tinycode build --single
+RUN GOOS=linux GOARCH=$TARGETARCH CGO_ENABLED=0 \
+    go build -ldflags "-s -w" -o /build/tinycode-binary ./cmd/tinycode
 
-# Stage 2: Build oh-my-tiny plugin
-FROM registry.access.redhat.com/ubi9/ubi AS plugin-builder
+# Stage 2: Runtime
+FROM registry.access.redhat.com/ubi9/ubi-minimal AS runtime
 
 ARG TARGETARCH
 
-RUN curl -fsSL https://rpm.nodesource.com/setup_20.x | bash - && \
-    dnf install -y nodejs && dnf clean all
-
-COPY oh-my-tiny-src/ /build/oh-my-tiny/
-
-WORKDIR /build/oh-my-tiny
-RUN npm ci
-RUN npm run build
-
-# Stage 3: Runtime — full UBI9
-# tmux is in RHEL9 baseos but not UBI subset; install via direct RPM from CentOS Stream 9
-# (same glibc 2.34 as RHEL9/UBI9 — fully ABI-compatible)
-FROM registry.access.redhat.com/ubi9/ubi AS runtime
-
-ARG TARGETARCH
-
-RUN dnf install -y shadow-utils tar gzip git-core && dnf clean all && \
-    ARCH=$(uname -m) && \
-    rpm --import https://www.centos.org/keys/RPM-GPG-KEY-CentOS-Official && \
-    rpm -Uvh --nodeps \
-      "https://mirror.stream.centos.org/9-stream/BaseOS/${ARCH}/os/Packages/tmux-3.2a-5.el9.${ARCH}.rpm" && \
-    rpm -Uvh --nodeps \
-      "https://mirror.stream.centos.org/9-stream/BaseOS/${ARCH}/os/Packages/libutempter-1.2.1-6.el9.${ARCH}.rpm" 2>/dev/null || true
+RUN microdnf install -y shadow-utils tar gzip git-core python3.11 python3.11-pip nodejs npm && \
+    python3.11 -m pip install --no-cache-dir ansible-lint && \
+    microdnf clean all
 
 RUN useradd -u 1001 -r -g 0 -m -s /sbin/nologin tinycode && \
-    dnf remove -y shadow-utils && dnf clean all
+    microdnf remove -y shadow-utils && microdnf clean all
 
-COPY --from=builder /build/tinycode/packages/tinycode/dist/tinycode-linux-*/bin/tinycode /usr/local/bin/tinycode
+COPY --from=builder /build/tinycode-binary /usr/local/bin/tinycode
 
-COPY --from=plugin-builder /build/oh-my-tiny/dist /opt/oh-my-tiny/dist
-COPY --from=plugin-builder /build/oh-my-tiny/package.json /opt/oh-my-tiny/package.json
-COPY --from=plugin-builder /build/oh-my-tiny/node_modules /opt/oh-my-tiny/node_modules
+COPY plugins/ /opt/tinycode-plugins/
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Stage bundled agents and skills in a non-PVC path.
-# The entrypoint copies them into the PVC-mounted config dir on startup.
-# (PVC at ~/.config/tinycode/ shadows anything COPY'd there at build time.)
 COPY config/agent /opt/tinycode-defaults/agent
 COPY config/skills /opt/tinycode-defaults/skills
 

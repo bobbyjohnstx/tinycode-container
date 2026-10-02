@@ -1,52 +1,53 @@
 # syntax=docker/dockerfile:1
-# tinycode-container: tinycode (web mode) with oh-my-tiny built-in
-# Build: podman build -f ContainerFile --platform linux/amd64 -t ghcr.io/bjohns/tinycode-container:latest .
+# tinycode-container: tinycode (web mode) for Kubernetes/OpenShift
+# Build: podman build -f ContainerFile --platform linux/amd64 -t ghcr.io/bobbyjohnstx/tinycode-container:latest .
 # Multi-arch: podman build -f ContainerFile --platform linux/amd64,linux/arm64 ...
 
 ARG TARGETARCH
 ARG TINYCODE_REF=main
 
-# Stage 1: Build tinycode binary
+# Stage 1: Build tinycode binary from Go source
 FROM registry.access.redhat.com/ubi9/ubi AS builder
 
 ARG TARGETARCH
+ARG TINYCODE_REF
 
-RUN dnf install -y git unzip make gcc gcc-c++ && dnf clean all
+RUN dnf install -y git make && dnf clean all
 
-# Install Bun (tinycode build toolchain)
-RUN curl -fsSL https://bun.sh/install | bash
-ENV PATH="/root/.bun/bin:$PATH"
+# Install Go
+ARG GO_VERSION=1.27.1
+RUN ARCH=$(uname -m) && \
+    case "$ARCH" in x86_64) GO_ARCH=amd64 ;; aarch64) GO_ARCH=arm64 ;; *) GO_ARCH=amd64 ;; esac && \
+    curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-${GO_ARCH}.tar.gz" | tar -C /usr/local -xz
+ENV PATH="/usr/local/go/bin:$PATH"
 
 # Clone tinycode from GitHub (public repo)
 RUN git clone https://github.com/bobbyjohnstx/tinycode.git /build/tinycode
 
 WORKDIR /build/tinycode
-ARG TINYCODE_REF
 RUN git checkout $TINYCODE_REF
-RUN bun install --frozen-lockfile
-# Build single self-contained binary (script/build.ts:263 — Bun compile)
-RUN bun run --cwd packages/tinycode build --single
 
-FROM registry.access.redhat.com/ubi9/ubi AS runtime
+# Build static binary (pure Go SQLite, no CGO needed)
+RUN GOOS=linux GOARCH=$TARGETARCH CGO_ENABLED=0 \
+    go build -ldflags "-s -w" -o /build/tinycode-binary ./cmd/tinycode
+
+# Stage 2: Runtime — UBI9 minimal with entrypoint
+FROM registry.access.redhat.com/ubi9/ubi-minimal AS runtime
 
 ARG TARGETARCH
 
-RUN dnf install -y shadow-utils tar gzip git-core && dnf clean all && \
-    ARCH=$(uname -m) && \
-    rpm --import https://www.centos.org/keys/RPM-GPG-KEY-CentOS-Official && \
-    rpm -Uvh --nodeps \
-      "https://mirror.stream.centos.org/9-stream/BaseOS/${ARCH}/os/Packages/tmux-3.2a-5.el9.${ARCH}.rpm" && \
-    rpm -Uvh --nodeps \
-      "https://mirror.stream.centos.org/9-stream/BaseOS/${ARCH}/os/Packages/libutempter-1.2.1-6.el9.${ARCH}.rpm" 2>/dev/null || true
+RUN microdnf install -y shadow-utils tar gzip git-core python3.11 python3.11-pip nodejs npm && \
+    python3.11 -m pip install --no-cache-dir ansible-lint && \
+    microdnf clean all
 
 # Create non-root user (UID 1001, GID 0 for OpenShift arbitrary UID support)
 RUN useradd -u 1001 -r -g 0 -m -s /sbin/nologin tinycode && \
-    dnf remove -y shadow-utils && dnf clean all
+    microdnf remove -y shadow-utils && microdnf clean all
 
-# Copy tinycode self-contained binary
-COPY --from=builder /build/tinycode/packages/tinycode/dist/tinycode-linux-*/bin/tinycode /usr/local/bin/tinycode
+# Copy tinycode binary
+COPY --from=builder /build/tinycode-binary /usr/local/bin/tinycode
 
-# Copy bundled plugins (npm packages pre-installed in plugins/)
+# Copy bundled plugins
 COPY plugins/ /opt/tinycode-plugins/
 
 # Copy entrypoint script
