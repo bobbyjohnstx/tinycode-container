@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [0.2.2] — 2026-10-08
+
+### Changed
+- Built from tinycode v2.2.0 (prompt queue, btw routing, unified picker, plugin security hardening)
+
 ### Fixed
 - arm64 tmux RPM architecture detection
 - Added git-core to CI runtime image (GitOps mode)
