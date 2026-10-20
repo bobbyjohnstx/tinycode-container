@@ -2,11 +2,11 @@
 
 [![CI](https://github.com/bobbyjohnstx/tinycode-container/actions/workflows/build-push.yaml/badge.svg)](https://github.com/bobbyjohnstx/tinycode-container/actions/workflows/build-push.yaml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/bobbyjohnstx/tinycode-container)](https://github.com/bobbyjohnstx/tinycode-container/releases)
 
-Single container image running **tinycode** (web mode) + **oh-my-tiny** (native plugin) for deployment to OpenShift and Kubernetes.
+Single container image running **tinycode** (web mode) for deployment to OpenShift and Kubernetes. tinycode is a single Go binary — no Node.js, Bun, or separate plugin process required.
 
 ## What is this?
 
-This project packages tinycode and the oh-my-tiny plugin as a self-contained container image suitable for multi-tenant Kubernetes/OpenShift environments. The container runs tinycode's web mode, exposing an HTTP API and embedded SolidJS web UI on port 4096.
+This project packages the tinycode binary as a self-contained container image suitable for multi-tenant Kubernetes/OpenShift environments. The container runs tinycode's web mode, exposing an HTTP API and embedded web UI on port 4096.
 
 The container interface (port, UID, health endpoints, volume mounts, environment variables) is documented in [CONTAINER.md](CONTAINER.md), which is the authoritative contract between this image and the tinycode-operator that deploys it.
 
@@ -30,7 +30,6 @@ To uninstall: `tinycode --uninstall`
 
 - **podman** or **docker** (for running and local builds)
 - **kubectl** or **oc** (for Kubernetes/OpenShift deployment)
-- **GitHub token** with repo read access (only needed for building — oh-my-tiny is currently a private dependency)
 
 ## Multi-Architecture Support
 
@@ -39,25 +38,17 @@ The container image is built for both `linux/amd64` and `linux/arm64`. CI produc
 ## Build Locally
 
 ```bash
-# Save your GitHub token to a file
-echo $GITHUB_TOKEN > ~/.github-token
-
 # Build for the current architecture
 podman build -f ContainerFile \
-  --secret id=github_token,src=$HOME/.github-token \
   -t quay.io/bjohns/tinycode-container:latest .
 
 # Build for a specific architecture
 podman build -f ContainerFile \
   --platform linux/arm64 \
-  --secret id=github_token,src=$HOME/.github-token \
   -t quay.io/bjohns/tinycode-container:latest .
 ```
 
-The multi-stage build:
-1. **Stage 1** (builder): Clones tinycode, installs Bun, builds self-contained binary
-2. **Stage 2** (plugin-builder): Clones oh-my-tiny, installs Node.js 20, compiles plugin
-3. **Stage 3** (runtime): UBI9 base with non-root user (UID 1001, GID 0)
+The build downloads the tinycode release binary for the target platform and installs it into a UBI9 runtime image with a non-root user (UID 1001, GID 0).
 
 ## Run Locally (Quick Test)
 
@@ -143,7 +134,7 @@ The tinycode web UI requires authentication. To set the password:
 
 **Configuration Hierarchy:**
 
-The entrypoint writes defaults to `config.json` on every startup, ensuring the oh-my-tiny plugin path is always present. User customizations should go in `tinycode.jsonc` (PVC-persisted) to survive image upgrades.
+User customizations should go in `tinycode.jsonc` (PVC-persisted) to survive image upgrades.
 
 Load order (lowest to highest priority): `config.json` → `tinycode.json` → `tinycode.jsonc`
 
@@ -168,31 +159,30 @@ The GitHub Actions workflow (`.github/workflows/build-push.yaml`) automatically 
 - **Tags:** `:latest` and `:<git-sha>`
 - **Smoke test:** Runs `tinycode --version` on both architectures
 - **Registries:** Quay.io (primary), GitHub Container Registry (mirror)
-- **Build:** Uses `docker/build-push-action` with QEMU for cross-compilation
 
 ## Features
 
 - **GitOps Mode:** Clone a git repository on container startup via `TINYCODE_GIT_REPO`, with optional auto-pull on restart
 - **vLLM Auto-Configuration:** Set `TINYCODE_VLLM_URL` to auto-configure vLLM endpoint and model
-- **RHOAI/OpenShift Auto-Detection:** Automatically detects Kubernetes environment and disables LSP downloads in air-gapped clusters
+- **RHOAI/OpenShift Auto-Detection:** Automatically detects Kubernetes environment
 - **Cluster-Admin Mode:** Enable `TINYCODE_CLUSTER_ADMIN=true` to download oc CLI and access cluster management capabilities
-- **Swarm Tool:** Includes `tmux` (installed from CentOS Stream 9 RPM) to support the `/swarm` tool for supervised multi-worker sessions with shared persistence
+- **Swarm Tool:** `/swarm` dispatches parallel agents as goroutines (no tmux needed — Go's native concurrency)
 - **Input Validation:** `TINYCODE_VLLM_MODEL` is validated to prevent shell injection (alphanumeric, `/`, `-`, `.` only)
-- **Read-Only Root:** Container filesystem can be mounted read-only for additional security in restricted environments
+- **Read-Only Root:** Container filesystem can be mounted read-only for additional security
 - **Security Headers:** Server includes standard security headers (CSP, X-Frame-Options, X-Content-Type-Options, etc.)
-- **Rate Limiting:** Ingress can be configured with rate limiting policies for OpenShift deployments
 
 ## Known Limitations
 
-- **AST grep tools** (`@ast-grep/napi`) in oh-my-tiny may experience degraded functionality due to Bun/Node.js native addon compatibility issues in containerized environments.
 - **Health probes** can use tcpSocket instead of `GET /global/health` if the health endpoint requires authentication in your deployment (see `k8s/base/deployment.yaml` comments).
 
 ## Ecosystem
 
-| Project | Description | Repository |
-|---------|-------------|------------|
-| [tinycode](https://github.com/bobbyjohnstx/tinycode) | Core AI coding assistant — server, TUI, web UI | `github.com/bobbyjohnstx/tinycode` |
-| [tinycode-operator](https://github.com/bobbyjohnstx/tinycode-operator) | OpenShift Operator managing `TinycodeInstance` CRs | `github.com/bobbyjohnstx/tinycode-operator` |
+| Project | Description |
+|---------|-------------|
+| [tinycode](https://github.com/bobbyjohnstx/tinycode) | Core binary — server, TUI, web UI, 23 agents, 32 plugins, 7 skills |
+| [tinycode-container](https://github.com/bobbyjohnstx/tinycode-container) | This repo — OCI container image |
+| [tinycode-operator](https://github.com/bobbyjohnstx/tinycode-operator) | Kubernetes Operator for OpenShift |
+| [homebrew-tap](https://github.com/bobbyjohnstx/homebrew-tap) | Homebrew formula for macOS/Linux |
 
 ## License
 
