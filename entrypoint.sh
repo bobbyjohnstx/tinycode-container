@@ -235,14 +235,16 @@ if [ "${TINYCODE_CLUSTER_ADMIN}" = "true" ]; then
   fi
 fi
 
+# Bind on all interfaces for k8s pod networking (default is 127.0.0.1).
+# TINYCODE_HOST and TINYCODE_PORT are read by serverConfig in config.go.
+export TINYCODE_HOST="${TINYCODE_HOST:-0.0.0.0}"
+
 # Session attach: if TINYCODE_SESSION_ID is set, attach to an existing session
 # instead of starting a new one. Useful for persistent containers.
 if [ -n "$TINYCODE_SESSION_ID" ]; then
   echo "Attaching to session: $TINYCODE_SESSION_ID"
-  exec tinycode web --hostname 0.0.0.0 --session "$TINYCODE_SESSION_ID"
+  exec tinycode web --session "$TINYCODE_SESSION_ID"
 fi
 
 # Start tinycode in web mode (HTTP API + embedded SolidJS web UI)
-# --hostname 0.0.0.0 required for k8s pod networking (default is 127.0.0.1)
-# TINYCODE_PORT env var sets the port (supported natively since issue #1 fix)
-exec tinycode web --hostname 0.0.0.0
+exec tinycode web
