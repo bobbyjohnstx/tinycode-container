@@ -25,7 +25,7 @@ must stay in sync with these values.
 
 | Field | Value |
 |-------|-------|
-| Container port | `4096` (tinycode default — `server.ts:123`) |
+| Container port | `4096` (tinycode default) |
 | Override | `TINYCODE_PORT` env var or `server.port` in config |
 
 ## Health Endpoints
@@ -74,10 +74,6 @@ must stay in sync with these values.
 | **Output (Set by Entrypoint)** | | |
 | `TINYCODE_CLUSTER_TYPE` | *(auto-detected)* | Set to `openshift` or `kubernetes` when `TINYCODE_CLUSTER_ADMIN=true` |
 
-## Included Tools
-
-**tmux** (v3.2a) is installed from CentOS Stream 9 RPM and included in the runtime image to support the `/swarm` skill — a supervised multi-worker orchestration tool that creates split-screen sessions for distributed task solving.
-
 ## Startup Behaviour
 
 The container ENTRYPOINT is `entrypoint.sh` which:
@@ -85,13 +81,13 @@ The container ENTRYPOINT is `entrypoint.sh` which:
 2. Validates `TINYCODE_VLLM_MODEL` format (alphanumeric, `/`, `_`, `-`, `.`, `:`, `@`, space; max 255 chars; no shell injection)
 3. Bridges `TINYCODE_VLLM_URL` → `TINYCODE_VLLM_HOST`
 4. Auto-detects Kubernetes environment (sets `TINYCODE_DISABLE_LSP_DOWNLOAD=1` in-cluster)
-5. Writes container defaults to `$XDG_CONFIG_HOME/tinycode/config.json` (lowest-priority config)
+5. Scans `/opt/tinycode-plugins/` for Go plugin binaries (`tinycode-plugin-<name>`) and writes them to `config.json`
    - Includes `"model"` field if `TINYCODE_VLLM_MODEL` is set
 6. GitOps mode: clones `TINYCODE_GIT_REPO` into `/projects` (or pulls if already exists)
 7. Initializes git repo in `/projects` if not present
 8. Copies bundled agents/skills from `/opt/tinycode-defaults/` into PVC
 9. Downloads `oc` CLI if `TINYCODE_CLUSTER_ADMIN=true`
-10. Runs `tinycode web --hostname 0.0.0.0` (or attaches to `TINYCODE_SESSION_ID`)
+10. Sets `TINYCODE_HOST=0.0.0.0` and runs `tinycode web` (or attaches to `TINYCODE_SESSION_ID`)
 
 User config in `tinycode.jsonc` (PVC-persisted) is never overwritten by the entrypoint.
 
