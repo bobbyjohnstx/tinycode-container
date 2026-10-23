@@ -48,7 +48,7 @@ podman build -f ContainerFile \
   -t quay.io/bjohns/tinycode-container:latest .
 ```
 
-The build downloads the tinycode release binary for the target platform and installs it into a UBI9 runtime image with a non-root user (UID 1001, GID 0).
+The build downloads the tinycode v2.6.1 release binary and plugin bundle for the target platform. Override with `--build-arg TINYCODE_VERSION=X.Y.Z`. No Go toolchain needed — the image pulls pre-built binaries from GitHub releases.
 
 ## Run Locally (Quick Test)
 

@@ -1,25 +1,17 @@
 # Bundled Plugins
 
-Add tinycode plugins here to pre-bake them into the container image.
+Go plugin binaries are downloaded from the tinycode release during the container build. They are placed in `/opt/tinycode-plugins/` and added to `PATH`.
 
-## Adding a plugin
+The entrypoint scans this directory for executables named `tinycode-plugin-<name>` and adds each to the plugin array in `config.json`.
 
-```bash
-cd plugins/
-npm install tinycode-plugin-example
-```
+## What's included
 
-This adds the package to `package.json` and downloads it to `node_modules/`. Both are committed to the repo so the container build doesn't need npm registry access.
+The container build downloads the `tinycode-plugins-linux-<arch>.tar.gz` bundle from the GitHub release. This includes all curated plugins (safety-net, ocp-context-injection, etc.).
 
-## How it works
+## Adding a plugin manually
 
-The ContainerFile COPYs `plugins/node_modules/` to `/opt/tinycode-plugins/` in the image. The entrypoint scans that directory for packages starting with `tinycode-plugin-` and adds each to the plugin array in `config.json`.
+Copy a plugin binary into `/opt/tinycode-plugins/` before the entrypoint runs, or use `tinycode plugin install <name>` at runtime.
 
-## Removing a plugin
+## Plugin list
 
-```bash
-cd plugins/
-npm uninstall tinycode-plugin-example
-```
-
-Then commit the updated `package.json` and `node_modules/`.
+See [plugin-catalog.md](https://github.com/bobbyjohnstx/tinycode/blob/main/docs/plugin-catalog.md) for the full registry.

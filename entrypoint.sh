@@ -46,14 +46,16 @@ if [ -n "${KUBERNETES_SERVICE_HOST:-}" ] && [ "${TINYCODE_AUTO_DETECT:-true}" !=
   fi
 fi
 
-# Build plugin list from bundled plugins in /opt/tinycode-plugins/
+# Build plugin list from bundled plugin binaries in /opt/tinycode-plugins/
+# Go plugins are standalone binaries named tinycode-plugin-<name>.
 PLUGIN_LIST=""
-if [ -d "/opt/tinycode-plugins/node_modules" ]; then
-  for plugin_dir in /opt/tinycode-plugins/node_modules/tinycode-plugin-*/; do
-    [ -d "$plugin_dir" ] || continue
+if [ -d "/opt/tinycode-plugins" ]; then
+  for plugin_bin in /opt/tinycode-plugins/tinycode-plugin-*; do
+    [ -x "$plugin_bin" ] || continue
+    plugin_name=$(basename "$plugin_bin" | sed 's/^tinycode-plugin-//')
     [ -n "$PLUGIN_LIST" ] && PLUGIN_LIST="$PLUGIN_LIST, "
-    PLUGIN_LIST="$PLUGIN_LIST\"$plugin_dir\""
-    echo "[tinycode] Bundled plugin: $(basename "$plugin_dir")"
+    PLUGIN_LIST="$PLUGIN_LIST\"$plugin_name\""
+    echo "[tinycode] Bundled plugin: $plugin_name"
   done
 fi
 

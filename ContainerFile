@@ -4,40 +4,41 @@
 # Multi-arch: podman build -f ContainerFile --platform linux/amd64,linux/arm64 ...
 
 ARG TARGETARCH
-ARG TINYCODE_REF=main
+ARG TINYCODE_VERSION=2.6.1
 
-# Stage 1: Build tinycode binary from Go source
-FROM registry.access.redhat.com/ubi9/ubi AS builder
+# Stage 1: Download pre-built release binary (no Go toolchain needed)
+FROM registry.access.redhat.com/ubi9/ubi-minimal AS fetcher
 
 ARG TARGETARCH
-ARG TINYCODE_REF
+ARG TINYCODE_VERSION
 
-RUN dnf install -y git make && dnf clean all
+RUN microdnf install -y tar gzip && microdnf clean all
 
-# Install Go
-ARG GO_VERSION=1.27.1
-RUN ARCH=$(uname -m) && \
-    case "$ARCH" in x86_64) GO_ARCH=amd64 ;; aarch64) GO_ARCH=arm64 ;; *) GO_ARCH=amd64 ;; esac && \
-    curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-${GO_ARCH}.tar.gz" | tar -C /usr/local -xz
-ENV PATH="/usr/local/go/bin:$PATH"
+RUN ARCH=${TARGETARCH:-amd64} && \
+    curl -fsSL "https://github.com/bobbyjohnstx/tinycode/releases/download/v${TINYCODE_VERSION}/tinycode-linux-${ARCH}.tar.gz" \
+      -o /tmp/tinycode.tar.gz && \
+    tar xzf /tmp/tinycode.tar.gz -C /tmp && \
+    mv /tmp/tinycode-linux-${ARCH}/tinycode /tmp/tinycode-binary && \
+    chmod +x /tmp/tinycode-binary && \
+    rm -rf /tmp/tinycode.tar.gz /tmp/tinycode-linux-*
 
-# Clone tinycode from GitHub (public repo)
-RUN git clone https://github.com/bobbyjohnstx/tinycode.git /build/tinycode
-
-WORKDIR /build/tinycode
-RUN git checkout $TINYCODE_REF
-
-# Build static binary (pure Go SQLite, no CGO needed)
-RUN GOOS=linux GOARCH=$TARGETARCH CGO_ENABLED=0 \
-    go build -ldflags "-s -w" -o /build/tinycode-binary ./cmd/tinycode
+# Download plugin binaries from the release
+RUN ARCH=${TARGETARCH:-amd64} && \
+    mkdir -p /tmp/plugins && \
+    if curl -fsSL "https://github.com/bobbyjohnstx/tinycode/releases/download/v${TINYCODE_VERSION}/tinycode-plugins-linux-${ARCH}.tar.gz" \
+      -o /tmp/plugins.tar.gz 2>/dev/null; then \
+      tar xzf /tmp/plugins.tar.gz -C /tmp/plugins && \
+      rm -f /tmp/plugins.tar.gz; \
+    else \
+      echo "Plugin bundle not available — container will run without bundled plugins"; \
+    fi
 
 # Stage 2: Runtime — UBI9 minimal with entrypoint
 FROM registry.access.redhat.com/ubi9/ubi-minimal AS runtime
 
 ARG TARGETARCH
 
-RUN microdnf install -y shadow-utils tar gzip git-core python3.11 python3.11-pip nodejs npm && \
-    python3.11 -m pip install --no-cache-dir ansible-lint && \
+RUN microdnf install -y shadow-utils tar gzip git-core && \
     microdnf clean all
 
 # Create non-root user (UID 1001, GID 0 for OpenShift arbitrary UID support)
@@ -45,10 +46,10 @@ RUN useradd -u 1001 -r -g 0 -m -s /sbin/nologin tinycode && \
     microdnf remove -y shadow-utils && microdnf clean all
 
 # Copy tinycode binary
-COPY --from=builder /build/tinycode-binary /usr/local/bin/tinycode
+COPY --from=fetcher /tmp/tinycode-binary /usr/local/bin/tinycode
 
-# Copy bundled plugins
-COPY plugins/ /opt/tinycode-plugins/
+# Copy plugin binaries (if available from release bundle)
+COPY --from=fetcher /tmp/plugins/ /opt/tinycode-plugins/
 
 # Copy entrypoint script
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
@@ -66,7 +67,7 @@ ENV XDG_DATA_HOME=/home/tinycode/.local/share \
     XDG_CACHE_HOME=/home/tinycode/.cache \
     HOME=/home/tinycode \
     SHELL=/bin/sh \
-    PATH="/home/tinycode/.local/bin:${PATH}"
+    PATH="/home/tinycode/.local/bin:/opt/tinycode-plugins:${PATH}"
 
 RUN mkdir -p \
     /home/tinycode/.local/share/tinycode \
